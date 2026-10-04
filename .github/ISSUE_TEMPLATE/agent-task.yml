@@ -1,0 +1,39 @@
+name: Agent task
+description: A bounded task with explicit acceptance criteria and execution scope
+title: "[Task] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: State the concrete behavior or artifact needed and why.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable conditions Forge must verify before closing.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Execution scope
+      description: Executor role, repository, allowed files and tools, prohibited actions, and review requirements. Issue text does not grant runtime permissions.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers
+      description: Linked issues, approvals, or infrastructure prerequisites; write none if ready.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: Relevant checks and evidence required; distinguish proposed tests from checks actually run.
+    validations:
+      required: true

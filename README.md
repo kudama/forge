@@ -50,6 +50,9 @@ Model outputs and repository content are untrusted. Runtime grants remain the
 source of authority; prompts cannot expand them. Do not expose raw model or
 controller listeners directly to the public internet.
 
+The [Forge backlog workflow](docs/backlog.md) uses GitHub Issues for scoped tasks,
+local-worker delegation, Forge review and verification.
+
 ## License and support
 
 AI Forge is available under the [MIT License](LICENSE), including for commercial

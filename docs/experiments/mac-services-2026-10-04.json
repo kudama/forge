@@ -1,0 +1,10 @@
+{
+  "controller_before": 58740,
+  "controller_after": 58761,
+  "controller_crash_recovery": true,
+  "mcp_ready_after_recovery": true,
+  "reboot_login_tested": false,
+  "ollama_crash_recovery": true,
+  "loopback_listeners_verified": true,
+  "regression_tests_passed": 130
+}

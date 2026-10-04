@@ -169,7 +169,12 @@ Statuses: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Errors includ
 
 Stop with Ctrl+C in the server terminal. Active tasks become interrupted; startup also reconciles records left by abrupt termination. No automatic replay. Do not run `--reload`, multiple workers, or concurrent replicas against this database. Keep the database directory private; task results may contain sensitive content. Logs are JSON lifecycle metadata with task IDs, without prompts, responses, credentials, or raw tool arguments. Configure rotation/retention in the chosen launcher before prolonged operation.
 
-The first deployment is manually started on the Mac. To run on Ubuntu, install the same Python environment and checkout under a dedicated non-admin service account. Place private grants outside the checkout, set absolute database/config paths, and use a single `systemd` service process with explicit working directory/environment and restart throttling. A service-unit installation is a later deployment step; no autostart or VM has been configured by this prototype.
+The Mac prototype uses the [user-login service manager](mac-services.md) for
+Ollama and the controller. To run on Ubuntu, install the same Python environment
+and checkout under a dedicated non-admin service account. Place private grants
+outside the checkout, set absolute database/config paths, and use a single
+`systemd` service process with explicit working directory/environment and restart
+throttling. Ubuntu service installation and VM deployment remain later steps.
 
 For a controller on another host, keep raw Ollama on loopback and use a restricted SSH tunnel or an authenticated TLS gateway. Update `FORGE_MODEL_URL` accordingly. Do not expose raw Ollama, publish controller ports to the Internet, or use unencrypted bearer tokens across an untrusted network. Reuse existing private networking. The current firewall was observed disabled; network deployment requires verifying firewall and access restrictions first.
 

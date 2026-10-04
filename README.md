@@ -37,6 +37,9 @@ For startup and recovery on macOS, see [service management](docs/mac-services.md
 
 ## Architecture and validation
 
+The [work-order design](docs/work-orders.md) defines explicit assignment and
+result contracts, tested through the current controller compatibility path.
+
 The controller and inference runtime are separate components and can run on
 separate hosts. The current validated environment is macOS; deployment to Ubuntu
 has not yet been validated. The default services bind to loopback. Remote access

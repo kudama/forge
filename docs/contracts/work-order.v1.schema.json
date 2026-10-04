@@ -1,0 +1,165 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "work_order_id",
+    "issue_url",
+    "source",
+    "objective",
+    "acceptance_criteria",
+    "agent",
+    "tools",
+    "runtime_limits",
+    "output_contract",
+    "review_owner",
+    "prohibited_actions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "work_order_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "issue_url": {
+      "type": "string",
+      "pattern": "^https://github\\.com/[^/]+/[^/]+/issues/[1-9][0-9]*$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository_id",
+        "revision",
+        "files"
+      ],
+      "properties": {
+        "repository_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)[A-Za-z0-9_/-]+\\.(py|md|toml)$",
+                "maxLength": 256
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true
+        }
+      }
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true
+    },
+    "agent": {
+      "enum": [
+        "repository_analyst",
+        "implementer"
+      ]
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "list_repository_files",
+          "read_repository_file"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "contains": {
+        "const": "read_repository_file"
+      }
+    },
+    "runtime_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeout_seconds",
+        "tool_calls",
+        "context_tokens",
+        "output_tokens"
+      ],
+      "properties": {
+        "timeout_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tool_calls": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "context_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "output_contract": {
+      "const": "worker-result.v1"
+    },
+    "review_owner": {
+      "const": "forge"
+    },
+    "prohibited_actions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "write_files",
+          "execute_commands",
+          "change_permissions",
+          "merge",
+          "deploy",
+          "retrieve_secrets"
+        ]
+      },
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Forge-issued work order v1"
+}

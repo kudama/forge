@@ -1,0 +1,29 @@
+[
+  {
+    "id": "current-model-limit-defaults",
+    "agent": "repository_analyst",
+    "kind": "limits",
+    "required_reads": [
+      "src/forge_controller/config.py"
+    ],
+    "prompt": "First use read_repository_file on repository forge src/forge_controller/config.py lines 8-40. Report only the current context_length and max_output_tokens defaults with exact repository-relative file:line citations. Keep under 80 words. Read only; do not claim tests ran."
+  },
+  {
+    "id": "positive-integer-review",
+    "agent": "repository_analyst",
+    "kind": "integer_review",
+    "required_reads": [
+      "src/forge_controller/config.py"
+    ],
+    "prompt": "First use read_repository_file on repository forge src/forge_controller/config.py lines 8-40. Review a proposed replacement of the current strict integer checks with isinstance(value, int) and value > 0. Is it safe for bool values? State the Python reason and an exact type-based alternative. Explicitly cover zero, negative, float and bool inputs. Cite current source. Under 130 words; do not edit or execute."
+  },
+  {
+    "id": "exact-temperature-patch",
+    "agent": "implementer",
+    "kind": "temperature_patch",
+    "required_reads": [
+      "src/forge_controller/model.py"
+    ],
+    "prompt": "First call read_repository_file with repository=\"forge\", path=\"src/forge_controller/model.py\", start_line=20, end_line=30. After reading, return only JSON with path and edits, a single before/after replacement. Propose changing ONLY temperature=0 to temperature=0.1 in the request options line. before must match the actual full line exactly including its newline and indentation. after must preserve every other field. No markdown, no execution, no file writes. This is an evaluation candidate, not an approved behavior change."
+  }
+]

@@ -97,3 +97,55 @@ def test_environment_rejects_invalid_limits(private_environment,variable,value):
     private_environment.setenv(variable,value)
     with pytest.raises(ValueError):
         Settings.from_environment()
+
+
+@pytest.mark.parametrize('message', [{}, {'content':''}, {'content':' \n\t'},
+    {'content':'','tool_calls':[]}, {'content':None}, {'content':123},
+    {'content':'','tool_calls':'invented'}, {'content':'','tool_calls':{}},
+    {'content':'','tool_calls':None}, {'content':'','tool_calls':1},
+    {'content':'valid','tool_calls':'invalid'}, []])
+async def test_reject_empty_or_invalid_final_response(tmp_path,message):
+    from forge_controller.model import ModelError
+    adapter=Ollama(make_settings(tmp_path))
+    await adapter.client.aclose()
+    adapter.client=httpx.AsyncClient(base_url='http://model',transport=httpx.MockTransport(
+        lambda request:httpx.Response(200,json={'message':message})))
+    try:
+        with pytest.raises(ModelError,match='^invalid_model_response$'):
+            await adapter.chat([{'role':'user','content':'test'}],[])
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.parametrize('message', [{'content':'valid'}, {'content':' valid\n'},
+    {'content':'','tool_calls':[{'function':{'name':'read_repository_file','arguments':{}}}]},
+    {'tool_calls':[{'function':{'name':'read_repository_file','arguments':{}}}]}])
+async def test_preserve_valid_final_and_tool_only_response(tmp_path,message):
+    adapter=Ollama(make_settings(tmp_path))
+    await adapter.client.aclose()
+    adapter.client=httpx.AsyncClient(base_url='http://model',transport=httpx.MockTransport(
+        lambda request:httpx.Response(200,json={'message':message})))
+    try:
+        assert await adapter.chat([{'role':'user','content':'test'}],[])==message
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.parametrize('message',[{}, {'content':' \n'}])
+async def test_empty_response_fails_controller_task(tmp_path,message):
+    from forge_controller.app import create_app
+    from test_controller import terminal
+    settings=make_settings(tmp_path)
+    adapter=Ollama(settings)
+    await adapter.client.aclose()
+    adapter.client=httpx.AsyncClient(base_url='http://model',transport=httpx.MockTransport(
+        lambda request:httpx.Response(200,json={'message':message})))
+    app=create_app(settings,adapter)
+    async with app.router.lifespan_context(app):
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://controller',
+            headers={'Authorization':'Bearer '+'t'*40}) as client:
+            submitted=await client.post('/v1/tasks',json={'prompt':'test'})
+            assert submitted.status_code==202
+            row=await terminal(client,submitted.json()['id'])
+            assert row['status']=='failed' and row['error']=='invalid_model_response'
+            assert row['result'] is None

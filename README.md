@@ -2,6 +2,13 @@
 
 Forge builds and maintains shared software for the personal AI platform. Domain behavior stays in the Jarvis, Thoth, Hermes, and Bear repositories.
 
+## License and support
+
+Forge is available under the [MIT License](LICENSE), including for commercial use.
+This is a personal prototype provided as-is. There is no guaranteed support,
+maintenance schedule, response time, or service availability. Third-party
+dependencies and model weights retain their own licenses.
+
 ## Controller prototype
 
 A small Python execution service coordinates local inference and explicitly permitted tools. It supports authenticated task submission, owner-scoped results, cancellation, deadlines, and persistent task records. Implemented tools provide synthetic read-only service status and explicitly granted source-file listing/reading for a local repository analyst and patch-only implementer. See the [first analyst experiment](docs/experiments/repository-analyst-2026-10-03.md).

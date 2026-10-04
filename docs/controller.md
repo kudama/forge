@@ -28,7 +28,7 @@ path.chmod(0o600)
 PY
 ```
 
-Each principal needs a unique random bearer token of at least 32 characters, an `agents` list containing `forge` and/or `repository_analyst`, and `services: ["prototype"]` or `[]`. An optional `repositories` list grants explicit repository IDs. Unknown fields are rejected. The file must have owner-only permissions. Never paste tokens into Git, commands, URLs, logs, or PRs. Rotate/revoke by editing the private file and restarting the controller; in-flight tasks should be stopped during revocation.
+Each principal needs a unique random bearer token of at least 32 characters, an `agents` list containing `forge`, `repository_analyst`, and/or `implementer`, and `services: ["prototype"]` or `[]`. An optional `repositories` list grants explicit repository IDs. Unknown fields are rejected. The file must have owner-only permissions. Never paste tokens into Git, commands, URLs, logs, or PRs. Rotate/revoke by editing the private file and restarting the controller; in-flight tasks should be stopped during revocation.
 
 ## Start locally
 
@@ -77,6 +77,12 @@ The analyst can list only manifest entries and read up to 80 numbered lines per 
 
 Every read rechecks principal repository permission, requested task capability, path membership, argument shape, and limits. Approved file/range metadata is audited without source content. A task cannot finish as an analyst without at least one successful source read (`sources_not_read`); this does not prove its conclusions are correct. Source content remains untrusted. Reports require senior review; see the [first experiment](experiments/repository-analyst-2026-10-03.md).
 
+## Patch-only implementer
+
+The `implementer` role uses the same explicit source manifest and read tools, with separate instructions to return proposed patch text. Grant it only when intended by adding `implementer` to the principal's `agents` list. Submit with `agent: "implementer"` and `tools: ["read_repository_file"]` (listing is optional). It must successfully read a source before completing.
+
+This role cannot apply patches, edit files, or execute commands. Returned patch text is untrusted: senior Forge reviews source applicability, syntax, scope, and behavior before applying it to an isolated checkout and running tests. Task status `succeeded` means a model response was returned, not that a patch was accepted or verified. See the [first implementation experiment](experiments/implementer-model-limits.md).
+
 ## Configuration
 
 | Setting | Default / requirement |
@@ -86,13 +92,15 @@ Every read rechecks principal repository permission, requested task capability, 
 | `FORGE_DATABASE` | `state/tasks.sqlite3`; local disk owned by service account |
 | `FORGE_MODEL_URL` | `http://127.0.0.1:11434`; trusted operator configuration |
 | `FORGE_MODEL` | `qwen3:8b` |
+| `FORGE_CONTEXT_LENGTH` | Positive integer; default 4096 context tokens |
+| `FORGE_MAX_OUTPUT_TOKENS` | Positive integer; default 512 output tokens |
 | `FORGE_TASK_TIMEOUT` | 60 seconds including queue wait |
 | `FORGE_CAPACITY` | 8 admitted tasks, including running work |
 | `FORGE_TOOL_ROUNDS` | Maximum 3 total tool calls |
 | `FORGE_CONTROLLER_URL` | Client URL, default `http://127.0.0.1:8787` |
 | `FORGE_CLIENT_PRINCIPAL` | Development client principal, default `mike` |
 
-Model calls use 4096-token context, at most 512 output tokens, thinking disabled, temperature 0, and five-minute idle unload. Model responses are limited to 64 KiB; HTTP request bodies to 32 KiB; prompts to 8000 characters. One task runs at a time. There is no automatic external-model fallback.
+Model calls default to 4096-token context and at most 512 output tokens; both limits can be overridden at startup. Thinking is disabled, temperature is 0, and models unload after five idle minutes. Model responses are limited to 64 KiB; HTTP request bodies to 32 KiB; prompts to 8000 characters. One task runs at a time. There is no automatic external-model fallback. New limits must be actual positive integers; booleans/fractional/string programmatic values and malformed environment values are rejected. Operator overrides can increase memory use, output length, latency, and deadline risk; practical upper bounds need workload measurements.
 
 ## API
 

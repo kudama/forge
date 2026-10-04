@@ -26,9 +26,11 @@ ANALYST_TOOLS = {'list_repository_files', 'read_repository_file'}
 
 def permitted(settings, owner, agent, name):
     grants = settings.principals[owner]
+    if agent not in grants['agents']:
+        return False
     if name == 'get_service_status':
         return agent == 'forge' and bool(grants['services'])
-    return agent == 'repository_analyst' and name in ANALYST_TOOLS and bool(grants.get('repositories', []))
+    return agent in {'repository_analyst', 'implementer'} and name in ANALYST_TOOLS and bool(grants.get('repositories', []))
 
 
 def execute(settings, owner, agent, name, args):

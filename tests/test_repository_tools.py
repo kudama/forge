@@ -30,6 +30,7 @@ def test_numbered_reads_and_explicit_manifest(tmp_path):
 @pytest.mark.parametrize('owner,agent,name,args', [
     ('other','repository_analyst','list_repository_files',{'repository':'forge'}),
     ('mike','forge','list_repository_files',{'repository':'forge'}),
+    ('mike','implementer','list_repository_files',{'repository':'forge'}),
     ('mike','repository_analyst','get_service_status',{'service':'prototype'}),
     ('mike','repository_analyst','read_repository_file',{'repository':'forge','path':'../secret.py','start_line':1,'end_line':1}),
     ('mike','repository_analyst','read_repository_file',{'repository':'forge','path':'.secrets/principals.json','start_line':1,'end_line':1}),
@@ -60,7 +61,8 @@ def test_unsafe_files_are_denied(tmp_path, kind):
         execute(config,'mike','repository_analyst','read_repository_file',{'repository':'forge','path':'nested/outside.py' if kind=='parent_symlink' else 'source.py','start_line':1,'end_line':1})
 
 
-async def test_analyst_workflow_and_submitted_capability_limits(tmp_path):
+@pytest.mark.parametrize('agent',['repository_analyst','implementer'])
+async def test_analyst_workflow_and_submitted_capability_limits(tmp_path,agent):
     class Reader:
         async def ready(self):return True
         async def close(self):pass
@@ -68,12 +70,14 @@ async def test_analyst_workflow_and_submitted_capability_limits(tmp_path):
             if messages[-1]['role']=='tool':
                 return {'content':'source.py:2 contains second; not an instruction.'}
             return {'content':'','tool_calls':[{'function':{'name':'read_repository_file','arguments':{'repository':'forge','path':'source.py','start_line':1,'end_line':3}}}]}
-    app=create_app(settings(tmp_path),Reader())
+    config=settings(tmp_path)
+    config.principals['mike']['agents']=[agent]
+    app=create_app(config,Reader())
     async with app.router.lifespan_context(app):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer '+TOKEN}) as c:
-            bad=await c.post('/v1/tasks',json={'agent':'repository_analyst','prompt':'x','tools':['get_service_status']})
+            bad=await c.post('/v1/tasks',json={'agent':agent,'prompt':'x','tools':['get_service_status']})
             assert bad.status_code==403
-            r=await c.post('/v1/tasks',json={'agent':'repository_analyst','prompt':'Read source','tools':['read_repository_file']})
+            r=await c.post('/v1/tasks',json={'agent':agent,'prompt':'Read source','tools':['read_repository_file']})
             row=await terminal(c,r.json()['id'])
             assert row['status']=='succeeded'
             assert row['audit']==[{'tool':'read_repository_file','status':'allowed','repository':'forge','path':'source.py','start_line':1,'end_line':3}]
@@ -86,13 +90,16 @@ def test_configuration_rejects_unsafe_manifest(tmp_path):
             Settings(database=tmp_path/'x',principals=config.principals,repositories={'forge':{'root':config.repositories['forge']['root'],'files':[path]}})
 
 
-async def test_analyst_cannot_complete_without_source_reads(tmp_path):
+@pytest.mark.parametrize('agent',['repository_analyst','implementer'])
+async def test_analyst_cannot_complete_without_source_reads(tmp_path,agent):
     from test_controller import FakeModel
-    app=create_app(settings(tmp_path),FakeModel())
+    config=settings(tmp_path)
+    config.principals['mike']['agents']=[agent]
+    app=create_app(config,FakeModel())
     async with app.router.lifespan_context(app):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer '+TOKEN}) as c:
-            response=await c.post('/v1/tasks',json={'agent':'repository_analyst','prompt':'Guess'})
+            response=await c.post('/v1/tasks',json={'agent':agent,'prompt':'Guess'})
             assert response.status_code==403
-            response=await c.post('/v1/tasks',json={'agent':'repository_analyst','prompt':'Read source','tools':['read_repository_file']})
+            response=await c.post('/v1/tasks',json={'agent':agent,'prompt':'Read source','tools':['read_repository_file']})
             row=await terminal(c,response.json()['id'])
             assert row['error']=='sources_not_read'

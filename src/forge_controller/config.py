@@ -13,11 +13,17 @@ class Settings:
     model_url: str = "http://127.0.0.1:11434"
     model: str = "qwen3:8b"
     timeout: float = 60
+    context_length: int = 4096
+    max_output_tokens: int = 512
     capacity: int = 8
     tool_rounds: int = 3
     repositories: dict[str, dict] = field(default_factory=dict)
 
     def __post_init__(self):
+        if type(self.context_length) is not int or self.context_length <= 0:
+            raise ValueError("context_length must be a positive integer")
+        if type(self.max_output_tokens) is not int or self.max_output_tokens <= 0:
+            raise ValueError("max_output_tokens must be a positive integer")
         url = urlparse(self.model_url)
         if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password or url.query or url.fragment:
             raise ValueError("Invalid model URL")
@@ -32,7 +38,7 @@ class Settings:
             token = grants.get("token", "")
             if not isinstance(token, str) or len(token) < 32:
                 raise ValueError("Tokens must contain at least 32 characters")
-            if not isinstance(grants.get("agents"), list) or not grants["agents"] or any(a not in {"forge", "repository_analyst"} for a in grants["agents"]):
+            if not isinstance(grants.get("agents"), list) or not grants["agents"] or any(a not in {"forge", "repository_analyst", "implementer"} for a in grants["agents"]):
                 raise ValueError("Unknown or missing agent grant")
             services = grants.get("services", [])
             if not isinstance(services, list) or any(s != "prototype" for s in services):
@@ -70,6 +76,8 @@ class Settings:
             principals=json.loads(path.read_text()),
             model_url=os.environ.get("FORGE_MODEL_URL", "http://127.0.0.1:11434"),
             model=os.environ.get("FORGE_MODEL", "qwen3:8b"),
+            context_length=int(os.environ.get("FORGE_CONTEXT_LENGTH", "4096")),
+            max_output_tokens=int(os.environ.get("FORGE_MAX_OUTPUT_TOKENS", "512")),
             timeout=float(os.environ.get("FORGE_TASK_TIMEOUT", "60")),
             capacity=int(os.environ.get("FORGE_CAPACITY", "8")),
             tool_rounds=int(os.environ.get("FORGE_TOOL_ROUNDS", "3")),

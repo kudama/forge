@@ -21,7 +21,7 @@ class Ollama:
 
     async def chat(self, messages, tools):
         payload = dict(model=self.settings.model, messages=messages, stream=False, think=False,
-                       options=dict(num_ctx=4096, num_predict=512, temperature=0), keep_alive='5m')
+                       options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0), keep_alive='5m')
         if tools:
             payload['tools'] = tools
         try:

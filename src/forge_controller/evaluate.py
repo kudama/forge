@@ -102,11 +102,12 @@ async def run_suite(settings, owner, cases, mode, adapter=None):
                             raise TimeoutError('Evaluation exceeded its controller deadline')
                         await asyncio.sleep(.05)
                     checks = assess(case, task, config, owner)
-                    rows.append({'case': case['id'], 'agent': case['agent'], 'status': task['status'], 'error': task['error'],
+                    rows.append({'case': case['id'], 'agent': case['agent'], 'model': config.model_for(case['agent']), 'status': task['status'], 'error': task['error'],
                                  'elapsed_seconds': round(time.monotonic()-start, 2), 'checks': checks,
                                  'mechanical_pass': all(checks.values()), 'manual_review_required': True,
                                  'result': task['result'], 'audit': task['audit']})
     return {'reference_mode': mode, 'corpus_sha256': corpus_hash, 'model': config.model,
+            'role_models': config.role_models,
             'context_length': config.context_length, 'max_output_tokens': config.max_output_tokens,
             'tool_call_limit': config.tool_rounds, 'cases': rows}
 
@@ -137,9 +138,11 @@ async def evaluate(args):
     async with httpx.AsyncClient(base_url=config.model_url, timeout=10, trust_env=False) as runtime:
         response = await runtime.get('/api/tags')
         response.raise_for_status()
-        model = next((item for item in response.json()['models'] if item['name'] == config.model), None)
-        if not model:
-            raise ValueError('Selected model is not installed')
+        installed = {item['name']: item for item in response.json()['models']}
+        required = {config.model_for(case['agent']) for case in cases}
+        if not required.issubset(installed):
+            raise ValueError('An evaluation role model is not installed')
+        manifests = {name: installed[name] for name in sorted(required)}
     source_hashes = {}
     for case in cases:
         for path in case['required_reads']:
@@ -147,7 +150,7 @@ async def evaluate(args):
                 'repository': 'forge', 'path': path, 'start_line': 1, 'end_line': 1})
             source_hashes[path] = read['source_sha256']
     modes = ['off', 'on'] if args.references == 'both' else [args.references]
-    report = {'checker_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'cases_sha256': cases_hash, 'source_sha256': source_hashes, 'model_manifest': model,
+    report = {'checker_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'cases_sha256': cases_hash, 'source_sha256': source_hashes, 'model_manifests': manifests,
               'method': 'sequential single runs; wall times include loading/caching; mechanical checks require senior review', 'runs': []}
     for mode in modes:
         report['runs'].append(await run_suite(config, args.principal, cases, mode))

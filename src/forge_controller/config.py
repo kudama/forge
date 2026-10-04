@@ -19,8 +19,15 @@ class Settings:
     tool_rounds: int = 3
     repositories: dict[str, dict] = field(default_factory=dict)
     examples_file: Path | None = None
+    role_models: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self):
+        if not isinstance(self.role_models, dict) or any(
+            role not in {'forge', 'repository_analyst', 'implementer'}
+            or not isinstance(model, str) or not model or model.strip() != model
+            for role, model in self.role_models.items()
+        ):
+            raise ValueError('Invalid role model mapping')
         if type(self.context_length) is not int or self.context_length <= 0:
             raise ValueError("context_length must be a positive integer")
         if type(self.max_output_tokens) is not int or self.max_output_tokens <= 0:
@@ -66,6 +73,11 @@ class Settings:
                 if path.is_absolute() or path.as_posix() != file or any(p.startswith('.') for p in path.parts) or path.suffix not in {'.py', '.md', '.toml'}:
                     raise ValueError('Only explicit non-hidden source paths are allowed')
 
+    def model_for(self, agent):
+        if agent not in {'forge', 'repository_analyst', 'implementer'}:
+            raise ValueError('Unknown agent')
+        return self.role_models.get(agent, self.model)
+
     @classmethod
     def from_environment(cls):
         path = Path(os.environ["FORGE_PRINCIPALS_FILE"]).expanduser()
@@ -77,6 +89,7 @@ class Settings:
             principals=json.loads(path.read_text()),
             model_url=os.environ.get("FORGE_MODEL_URL", "http://127.0.0.1:11434"),
             model=os.environ.get("FORGE_MODEL", "qwen3:8b"),
+            role_models=json.loads(os.environ.get("FORGE_ROLE_MODELS", "{}")),
             context_length=int(os.environ.get("FORGE_CONTEXT_LENGTH", "4096")),
             max_output_tokens=int(os.environ.get("FORGE_MAX_OUTPUT_TOKENS", "512")),
             timeout=float(os.environ.get("FORGE_TASK_TIMEOUT", "60")),

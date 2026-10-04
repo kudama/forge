@@ -69,9 +69,9 @@ def test_corpus_permissions_duplicates_and_budget(tmp_path):
 async def test_reference_injection_and_audit(tmp_path):
     from dataclasses import replace
     config=settings(tmp_path)
-    config=replace(config,examples_file=corpus(tmp_path,config),tool_rounds=1)
+    config=replace(config,examples_file=corpus(tmp_path,config),tool_rounds=1,role_models={"repository_analyst":"reader"})
     class Reader(FakeModel):
-        async def chat(self,messages,tools):
+        async def chat(self,messages,tools, *, agent='forge'):
             assert 'reviewed-integer' in messages[1]['content']
             if messages[-1]['role']=='tool':
                 return {'content':'bool type(value) is int; reject zero negative float'}
@@ -80,8 +80,10 @@ async def test_reference_injection_and_audit(tmp_path):
     run=await run_suite(config,'mike',[case],'on',Reader())
     row=run['cases'][0]
     assert row['status']=='succeeded'  # reference retrieval doesn't consume tool budget
-    assert row['audit'][0]['example_id']=='reviewed-integer'
+    assert next(a for a in row['audit'] if a['tool']=='reviewed_example')['example_id']=='reviewed-integer'
     assert row['manual_review_required'] is True
+    assert row['model']==config.model_for(case['agent'])
+    assert run['role_models']==config.role_models
     assert row['mechanical_pass'] is False  # missing isinstance in answer is detected
     assert config.database.exists() is False  # evaluation uses its own temporary DB
 

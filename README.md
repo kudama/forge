@@ -15,3 +15,5 @@ Model context/output limits are configurable at startup. See the [reviewed imple
 [Reviewed examples and evaluation loop](docs/feedback-loop.md) provides scoped reference retrieval and repeatable checks with required senior review. It does not automatically train or promote models.
 
 The [coding-model comparison](docs/experiments/coding-model-comparison-2026-10-03.md) records reviewed patch, test-writing and seeded-bug results for Qwen3 8B and Qwen3-Coder 30B, with a repeatable isolated evaluation runner.
+
+[Per-role routing](docs/experiments/role-model-routing-2026-10-03.md) lets operator configuration select a coding model for implementer proposals while retaining the lightweight model for other roles. Tasks record the selected model; missing models fail explicitly.

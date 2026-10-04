@@ -25,7 +25,7 @@ class FakeModel:
     async def close(self):
         pass
 
-    async def chat(self, messages, tools):
+    async def chat(self, messages, tools, *, agent='forge'):
         self.calls += 1
         self.started.set()
         if self.mode == 'wait':
@@ -85,7 +85,7 @@ async def test_scoped_tool_and_audit(tmp_path):
     async with client(tmp_path, FakeModel('tool')) as (c, app):
         row = await terminal(c, await submit(c, tools=['get_service_status']))
         assert row['status'] == 'succeeded'
-        assert row['audit'] == [{'tool': 'get_service_status', 'status': 'allowed'}]
+        assert [a for a in row['audit'] if a['tool']!='model_selection'] == [{'tool': 'get_service_status', 'status': 'allowed'}]
 
 
 @pytest.mark.parametrize('mode,tools', [('bad_tool', ['get_service_status']), ('tool', [])])
@@ -94,14 +94,14 @@ async def test_model_cannot_expand_permissions(tmp_path, mode, tools):
         row = await terminal(c, await submit(c, tools=tools))
         assert row['status'] == 'failed'
         assert row['error'] == 'tool_denied'
-        assert row['audit'][0]['status'] == 'denied'
+        assert next(a for a in row['audit'] if a['tool']=='unrecognized_or_denied')['status'] == 'denied'
 
 
 async def test_loop_bound(tmp_path):
     async with client(tmp_path, FakeModel('loop'), tool_rounds=2) as (c, app):
         row = await terminal(c, await submit(c, tools=['get_service_status']))
         assert row['error'] == 'tool_limit_exceeded'
-        assert len(row['audit']) == 2
+        assert len([a for a in row['audit'] if a['tool']!='model_selection']) == 2
 
 
 async def test_cancel_does_not_kill_worker(tmp_path):
@@ -211,7 +211,7 @@ async def test_adapter_errors_and_limits(tmp_path):
 async def test_worker_survives_model_error(tmp_path):
     from forge_controller.model import ModelError
     class Flaky(FakeModel):
-        async def chat(self, messages, tools):
+        async def chat(self, messages, tools, *, agent='forge'):
             self.calls += 1
             if self.calls == 1:
                 raise ModelError('model_unavailable')

@@ -7,7 +7,7 @@
     "reviewer": "Senior Forge review",
     "reviewed_on": "2026-10-03",
     "source_hashes": {
-      "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375"
+      "src/forge_controller/config.py": "e7d85bac700456d2e6f2df7a668de7c8ab3e64c75400ad15fdf5463506bdbe29"
     },
     "terms": [
       "integer",
@@ -26,7 +26,7 @@
     "reviewer": "Senior Forge review",
     "reviewed_on": "2026-10-03",
     "source_hashes": {
-      "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd"
+      "src/forge_controller/model.py": "18df90a31f3b65d5c66ad95f9110bd296694eb5cd0f163efdf1f990734196878"
     },
     "terms": [
       "patch",
@@ -45,7 +45,7 @@
     "reviewer": "Senior Forge review",
     "reviewed_on": "2026-10-03",
     "source_hashes": {
-      "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd"
+      "src/forge_controller/model.py": "18df90a31f3b65d5c66ad95f9110bd296694eb5cd0f163efdf1f990734196878"
     },
     "terms": [
       "defaults",

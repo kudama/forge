@@ -66,7 +66,7 @@ async def test_analyst_workflow_and_submitted_capability_limits(tmp_path,agent):
     class Reader:
         async def ready(self):return True
         async def close(self):pass
-        async def chat(self,messages,tools):
+        async def chat(self,messages,tools, *, agent='forge'):
             if messages[-1]['role']=='tool':
                 return {'content':'source.py:2 contains second; not an instruction.'}
             return {'content':'','tool_calls':[{'function':{'name':'read_repository_file','arguments':{'repository':'forge','path':'source.py','start_line':1,'end_line':3}}}]}
@@ -80,7 +80,7 @@ async def test_analyst_workflow_and_submitted_capability_limits(tmp_path,agent):
             r=await c.post('/v1/tasks',json={'agent':agent,'prompt':'Read source','tools':['read_repository_file']})
             row=await terminal(c,r.json()['id'])
             assert row['status']=='succeeded'
-            assert row['audit']==[{'tool':'read_repository_file','status':'allowed','repository':'forge','path':'source.py','start_line':1,'end_line':3}]
+            assert [a for a in row['audit'] if a['tool'] != 'model_selection']==[{'tool':'read_repository_file','status':'allowed','repository':'forge','path':'source.py','start_line':1,'end_line':3}]
 
 
 def test_configuration_rejects_unsafe_manifest(tmp_path):

@@ -85,6 +85,29 @@ This role cannot apply patches, edit files, or execute commands. Returned patch 
 
 ## Configuration
 
+Optional role routing uses operator-owned configuration:
+
+```sh
+export FORGE_ROLE_MODELS='{"implementer":"qwen3-coder:30b"}'
+```
+
+Install each selected model first. `forge` and `repository_analyst` then retain
+`FORGE_MODEL` (8B by default), while implementer tasks use the coding model.
+Unspecified roles use `FORGE_MODEL`; an empty mapping preserves previous behavior.
+Only the three existing roles and nonempty model-name strings are accepted.
+Clients cannot supply a model in task input. All inference rounds for a task use
+its role's model, and a `model_selection` audit entry records that selection
+without consuming the tool budget. Missing models fail; there is no runtime
+fallback to another model. Readiness requires every effective role model installed
+and checks tags without loading them. Evaluation reports record actual role models.
+
+Keep the single controller worker and Ollama `OLLAMA_NUM_PARALLEL=1` /
+`OLLAMA_MAX_LOADED_MODELS=1` settings shown above. The controller serializes its
+tasks; Ollama manages loading and eviction. Those runtime limits are deployment
+settings, not enforced against unrelated clients by the controller. Switching
+roles can add model-loading latency. The larger model occupied about 17.6 GiB
+with context 4096 in the prototype comparison.
+
 | Setting | Default / requirement |
 | --- | --- |
 | `FORGE_PRINCIPALS_FILE` | Required path to private principal grants |
@@ -92,6 +115,7 @@ This role cannot apply patches, edit files, or execute commands. Returned patch 
 | `FORGE_DATABASE` | `state/tasks.sqlite3`; local disk owned by service account |
 | `FORGE_MODEL_URL` | `http://127.0.0.1:11434`; trusted operator configuration |
 | `FORGE_MODEL` | `qwen3:8b` |
+| `FORGE_ROLE_MODELS` | JSON role-to-model mapping, default `{}` |
 | `FORGE_EXAMPLES_FILE` | Optional reviewed example collection; see [feedback loop](feedback-loop.md) |
 | `FORGE_CONTEXT_LENGTH` | Positive integer; default 4096 context tokens |
 | `FORGE_MAX_OUTPUT_TOKENS` | Positive integer; default 512 output tokens |

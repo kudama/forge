@@ -15,12 +15,14 @@ class Ollama:
         try:
             response = await self.client.get('/api/tags', timeout=3)
             response.raise_for_status()
-            return any(m.get('name') == self.settings.model for m in response.json()['models'])
+            installed = {m.get('name') for m in response.json()['models']}
+            required = {self.settings.model_for(agent) for agent in ('forge', 'repository_analyst', 'implementer')}
+            return required.issubset(installed)
         except (httpx.HTTPError, ValueError, KeyError, TypeError):
             return False
 
-    async def chat(self, messages, tools):
-        payload = dict(model=self.settings.model, messages=messages, stream=False, think=False,
+    async def chat(self, messages, tools, *, agent='forge'):
+        payload = dict(model=self.settings.model_for(agent), messages=messages, stream=False, think=False,
                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0), keep_alive='5m')
         if tools:
             payload['tools'] = tools

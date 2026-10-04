@@ -1,6 +1,6 @@
 # Forge-issued work orders
 
-Status: design v1 with a real compatibility-path trial. This document defines the
+Status: v1 contracts with a Forge-side validator/compiler and real compatibility-path trials. This document defines the
 master-agent delegation boundary; it does not add a controller endpoint or change
 runtime grants. Forge selects work from GitHub Issues. Workers never consume the
 backlog or expand their permissions independently.
@@ -69,14 +69,54 @@ Evidence must distinguish worker claims from independently run checks and record
 any reviewer corrections. Task IDs, revision/model provenance and redacted audit
 can be published; private source, credentials and sensitive results cannot.
 
+## Validator and compiler
+
+`scripts/work_orders.py` provides two explicit operations. It uses JSON Schema
+validation already included in `requirements-mcp.lock`; no additional dependency
+is introduced. Run from the checkout with the same operator-managed `FORGE_*`
+environment as the active controller. There is no automatic discovery of the
+running controller's configuration; the operator must ensure those settings match.
+
+```sh
+.venv/bin/python scripts/work_orders.py compile /private/path/order.json \
+  --principal forge_mcp > /private/path/task-input.json
+.venv/bin/python scripts/work_orders.py validate-result /private/path/order.json \
+  --principal forge_mcp --result /private/path/result.json \
+  --execution /private/path/execution.json
+```
+
+Use private directories and mode 600 for order, prompt, execution and result
+files; they may contain sensitive task data. The compiler emits only the existing
+task API arguments and never submits, applies, merges or changes GitHub state.
+Forge submits them through MCP and saves the returned task ID. Historical examples
+are not ready-to-run orders: create a new ID and pin the current revision/hashes.
+
+Preflight enforces schemas, current grants, exact configured limits, HEAD revision,
+approved file access and hashes matching both Git source and current source.
+Result validation repeats preflight, checks the matching worker result against a
+successful owner/role-scoped execution record, rejects undeclared reads/tools,
+checks tool budget and citation ranges against the audit, and validates exact,
+non-overlapping source replacements. Supply an execution record retrieved through
+the authenticated controller by Forge; worker-supplied records are not provenance.
+Local JSON inputs are size-bounded and reject duplicate keys and nonstandard constants.
+
+The returned `review_required: true` is deliberate. Structural validity and source
+correspondence do not prove a claim, patch behavior or acceptance criteria. Forge
+must independently review and test. The validator does not authenticate a saved
+JSON execution record or capture immutable source snapshots; its caller and
+operator settings are trusted parts of this Forge-side boundary.
+
+The [compiled handoff trial](experiments/work-order-handoff-2026-10-04.json)
+passed through the real MCP controller, persisted private attempt metadata, and
+returned independently reviewed source-line evidence. The full optional-tooling
+suite passes 188 tests, including 34 handoff regression cases.
+
 ## Next implementation boundary
 
-After reviewing this design, add a thin Forge-side validator/compiler with no
-GitHub polling or scheduler. Store immutable orders and attempt/review links in
-private state; version schema changes explicitly. Add negative checks for unknown
-fields, path escape, missing grants, source drift, mismatched IDs, undeclared
-files, invalid line ranges and malformed output. Preserve existing submission
-and ownership behavior. Controller-native work orders and idempotent submission
+The Forge-side validator/compiler has no GitHub polling or scheduler. Trial order
+and attempt/review links stay in private state; automatic durable handoff storage
+and recovery are not implemented. Preserve existing submission and ownership
+behavior. Controller-native work orders and idempotent submission
 need separate designs and migrations rather than prompt-only claims of enforcement.
 
 The compatibility trial uses [issue #15](https://github.com/kudama/forge/issues/15)

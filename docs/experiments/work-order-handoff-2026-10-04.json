@@ -1,0 +1,58 @@
+{
+  "work_order_id": "b31993d3dea943ba96aedae18581fe37",
+  "issue_url": "https://github.com/kudama/forge/issues/17",
+  "controller_task_id": "198441c57fe246b5a1db9f1e850b3ea0",
+  "source_revision": "56b48dc9ee5b46b287947331dfb1c8ccde1a1b6e",
+  "execution_status": "succeeded",
+  "audit": [
+    {
+      "tool": "model_selection",
+      "status": "selected",
+      "agent": "repository_analyst",
+      "model": "qwen3:8b"
+    },
+    {
+      "tool": "read_repository_file",
+      "status": "allowed",
+      "repository": "forge",
+      "path": "src/forge_controller/model.py",
+      "start_line": 40,
+      "end_line": 57
+    }
+  ],
+  "worker_result": {
+    "schema_version": 1,
+    "work_order_id": "b31993d3dea943ba96aedae18581fe37",
+    "outcome": "proposal",
+    "summary": "The response byte limit is 65536 bytes, and the corresponding error identifier is 'model_response_too_large'.",
+    "evidence": [
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 46,
+        "end_line": 46,
+        "claim": "The response byte limit is set to 65536 bytes."
+      },
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 47,
+        "end_line": 47,
+        "claim": "The corresponding error identifier is 'model_response_too_large'."
+      }
+    ],
+    "changes": [],
+    "uncertainties": [],
+    "checks_not_run": [
+      "tests"
+    ]
+  },
+  "validator_verdict": {
+    "structure_valid": true,
+    "source_valid": true,
+    "review_required": true
+  },
+  "review_status": "accepted_analysis",
+  "private_state_saved": true,
+  "native_work_order_enforcement": false,
+  "independent_claim_review": true,
+  "regression_tests_passed": 188
+}

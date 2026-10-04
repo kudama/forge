@@ -1,0 +1,566 @@
+{
+  "date": "2026-10-03",
+  "runner_sha256": "e6d81f4e178e220fc9c4b5b8de08a1bba0f1ecad467b6d18e8284b3c5f357302",
+  "initial_baseline": {
+    "model": "qwen3:8b",
+    "base_source_sha256": {
+      "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+      "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+      "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+      "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+    },
+    "method": "one attempt per case; references disabled; cold loading included; generated code never executed by this runner",
+    "context_length": 4096,
+    "max_output_tokens": 1024,
+    "cases": [
+      {
+        "case": "patch",
+        "prompt": "Read model.py lines 1\u201340. Propose exactly one edit changing keep_alive from 5m to 2m, preserving everything else. Return only JSON {\"path\":\"src/forge_controller/model.py\",\"edits\":[{\"before\":\"exact existing text\",\"after\":\"replacement text\"}]}. Preserve source indentation and real JSON escaping.",
+        "elapsed_seconds": 1.43,
+        "fixture_sha256": {
+          "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+          "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+          "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+          "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+        },
+        "task": {
+          "id": "c88515db49114d919f11a06f1b6ffa03",
+          "owner": "tester",
+          "agent": "implementer",
+          "status": "failed",
+          "created": 1791080710.052214,
+          "updated": 1791080711.427511,
+          "result": null,
+          "error": "sources_not_read",
+          "audit": []
+        },
+        "manual_review_required": true
+      },
+      {
+        "case": "test",
+        "prompt": "Read model.py lines 1\u201340 and tests/test_model_limits.py lines 1\u201380. Return only JSON {\"path\":\"tests/test_candidate.py\",\"content\":\"complete Python test source\"}. Write one meaningful async pytest test using the actual Ollama and Settings APIs and httpx.MockTransport. Verify Ollama.chat raises ModelError with model_unavailable when upstream returns HTTP 503. Close clients. Do not invent helpers or execute anything.",
+        "elapsed_seconds": 2.35,
+        "fixture_sha256": {
+          "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+          "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+          "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+          "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+        },
+        "task": {
+          "id": "df262fc73ecb45bbb03ff3a5c5423139",
+          "owner": "tester",
+          "agent": "implementer",
+          "status": "failed",
+          "created": 1791080711.4881668,
+          "updated": 1791080713.796114,
+          "result": null,
+          "error": "sources_not_read",
+          "audit": []
+        },
+        "manual_review_required": true
+      },
+      {
+        "case": "bug",
+        "prompt": "Read config.py lines 20\u201335. This isolated copy contains a seeded validation bug: context_length accepts booleans. Propose the smallest correct edit that rejects booleans while preserving acceptance of positive exact integers and rejection of zero, negatives, floats, strings and None. Return only JSON {\"path\":\"src/forge_controller/config.py\",\"edits\":[{\"before\":\"exact existing text\",\"after\":\"replacement text\"}]}. Do not change max_output_tokens or unrelated code.",
+        "elapsed_seconds": 0.72,
+        "fixture_sha256": {
+          "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+          "src/forge_controller/config.py": "2749eec2ed7bf8cfaf2f056e1d49091a94b59357842f857e2b08fa960cfc2da5",
+          "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+          "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+        },
+        "task": {
+          "id": "785abb776d964970a1aabe3216397799",
+          "owner": "tester",
+          "agent": "implementer",
+          "status": "failed",
+          "created": 1791080713.840124,
+          "updated": 1791080714.533231,
+          "result": null,
+          "error": "sources_not_read",
+          "audit": []
+        },
+        "manual_review_required": true
+      }
+    ],
+    "manifest": {
+      "name": "qwen3:8b",
+      "model": "qwen3:8b",
+      "modified_at": "2026-10-03T16:50:15.652213487-07:00",
+      "size": 5225388164,
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen3",
+        "families": [
+          "qwen3"
+        ],
+        "parameter_size": "8.2B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 40960,
+        "embedding_length": 4096
+      },
+      "capabilities": [
+        "completion",
+        "tools",
+        "thinking"
+      ]
+    }
+  },
+  "runs": [
+    {
+      "model": "qwen3:8b",
+      "base_source_sha256": {
+        "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+        "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+        "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+        "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+      },
+      "method": "one attempt per case; references disabled; cold loading included; generated code never executed by this runner",
+      "context_length": 4096,
+      "max_output_tokens": 1024,
+      "cases": [
+        {
+          "case": "patch",
+          "prompt": "Use read_repository_file with repository=\"forge\" and full paths src/forge_controller/model.py, src/forge_controller/config.py, tests/test_model_limits.py as relevant. You must call the tool before answering. Read model.py lines 1\u201340. Propose exactly one edit changing keep_alive from 5m to 2m, preserving everything else. Return only JSON {\"path\":\"src/forge_controller/model.py\",\"edits\":[{\"before\":\"exact existing text\",\"after\":\"replacement text\"}]}. Preserve source indentation and real JSON escaping.",
+          "elapsed_seconds": 2.45,
+          "fixture_sha256": {
+            "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+            "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+            "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+            "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+          },
+          "task": {
+            "id": "45cb4ab886474ff48f37f28fd3033e51",
+            "owner": "tester",
+            "agent": "implementer",
+            "status": "succeeded",
+            "created": 1791080739.3189812,
+            "updated": 1791080741.700907,
+            "result": "{\"path\":\"src/forge_controller/model.py\",\"edits\":[{\"before\":\"                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0), keep_alive='5m')\",\"after\":\"                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0), keep_alive='2m')\"}]}",
+            "error": null,
+            "audit": [
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/model.py",
+                "start_line": 1,
+                "end_line": 40
+              }
+            ]
+          },
+          "manual_review_required": true,
+          "review": {
+            "accepted": false,
+            "finding": "Before text has 24 leading spaces; actual source has 23. Exact replacement is inapplicable. One whitespace correction would make the intended edit correct, but strict uncorrected score is failure."
+          }
+        },
+        {
+          "case": "test",
+          "prompt": "Use read_repository_file with repository=\"forge\" and full paths src/forge_controller/model.py, src/forge_controller/config.py, tests/test_model_limits.py as relevant. You must call the tool before answering. Read model.py lines 1\u201340 and tests/test_model_limits.py lines 1\u201380. Return only JSON {\"path\":\"tests/test_candidate.py\",\"content\":\"complete Python test source\"}. Write one meaningful async pytest test using the actual Ollama and Settings APIs and httpx.MockTransport. Verify Ollama.chat raises ModelError with model_unavailable when upstream returns HTTP 503. Close clients. Do not invent helpers or execute anything.",
+          "elapsed_seconds": 4.9,
+          "fixture_sha256": {
+            "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+            "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+            "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+            "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+          },
+          "task": {
+            "id": "21ab0ef774ba49b18101aaa922894656",
+            "owner": "tester",
+            "agent": "implementer",
+            "status": "succeeded",
+            "created": 1791080741.774915,
+            "updated": 1791080746.625946,
+            "result": "{\"path\":\"tests/test_candidate.py\",\"content\":\"import httpx\\nimport pytest\\nfrom httpx import MockTransport\\nfrom forge_controller.model import Ollama\\nfrom forge_controller.config import Settings\\n\\ndef test_model_unavailable():\\n    settings = Settings(model_url='http://ollama:11434', model='qwen3:8b', context_length=4096, max_output_tokens=512)\\n    ollama = Ollama(settings)\\n    transport = MockTransport(\\n        side_effect=[\\n            httpx.Response(503, json={'error': 'model_unavailable'})\\n        ]\\n    )\\n    ollama.client = httpx.AsyncClient(base_url=settings.model_url, transport=transport, timeout=settings.timeout)\\n    \\n    with pytest.raises(ModelError) as exc_info:\\n        async def test():\\n            await ollama.chat([{'role': 'user', 'content': 'test'}], [])\\n        asyncio.run(test())\\n    \\n    assert str(exc_info.value) == 'model_unavailable'\\n    \\n    await ollama.client.aclose()\"}",
+            "error": null,
+            "audit": [
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/model.py",
+                "start_line": 1,
+                "end_line": 40
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "tests/test_model_limits.py",
+                "start_line": 1,
+                "end_line": 74
+              }
+            ]
+          },
+          "manual_review_required": true,
+          "review": {
+            "accepted": false,
+            "finding": "Await outside async function; missing required Settings arguments, ModelError/asyncio imports; nonexistent MockTransport side_effect API; unclosed original client. Reject without execution.",
+            "syntax_error": "'await' outside async function (candidate, line 24)"
+          }
+        },
+        {
+          "case": "bug",
+          "prompt": "Use read_repository_file with repository=\"forge\" and full paths src/forge_controller/model.py, src/forge_controller/config.py, tests/test_model_limits.py as relevant. You must call the tool before answering. Read config.py lines 20\u201335. This isolated copy contains a seeded validation bug: context_length accepts booleans. Propose the smallest correct edit that rejects booleans while preserving acceptance of positive exact integers and rejection of zero, negatives, floats, strings and None. Return only JSON {\"path\":\"src/forge_controller/config.py\",\"edits\":[{\"before\":\"exact existing text\",\"after\":\"replacement text\"}]}. Do not change max_output_tokens or unrelated code.",
+          "elapsed_seconds": 1.53,
+          "fixture_sha256": {
+            "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+            "src/forge_controller/config.py": "2749eec2ed7bf8cfaf2f056e1d49091a94b59357842f857e2b08fa960cfc2da5",
+            "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+            "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+          },
+          "task": {
+            "id": "4dcb6ed6865a49c9a41777f5f71ec746",
+            "owner": "tester",
+            "agent": "implementer",
+            "status": "succeeded",
+            "created": 1791080746.675183,
+            "updated": 1791080748.1346,
+            "result": "{\"path\":\"src/forge_controller/config.py\",\"edits\":[{\"before\":\"if not isinstance(self.context_length, int) or self.context_length <= 0:\",\"after\":\"if not isinstance(self.context_length, (int, bool)) or self.context_length <= 0:\"}]}",
+            "error": null,
+            "audit": [
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/config.py",
+                "start_line": 20,
+                "end_line": 35
+              }
+            ]
+          },
+          "manual_review_required": true,
+          "review": {
+            "accepted": false,
+            "finding": "Explicitly includes bool in isinstance tuple; still accepts True. Reject without correction."
+          }
+        }
+      ],
+      "manifest": {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-03T16:50:15.652213487-07:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      },
+      "seeded_bug_validation": {
+        "command": "pytest tests/test_model_limits.py on isolated seeded fixture",
+        "failed": 1,
+        "passed": 31,
+        "failure": "True-context_length did not raise ValueError"
+      }
+    },
+    {
+      "model": "qwen3-coder:30b",
+      "base_source_sha256": {
+        "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+        "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+        "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+        "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+      },
+      "method": "one attempt per case; references disabled; cold loading included; generated code never executed by this runner",
+      "context_length": 4096,
+      "max_output_tokens": 1024,
+      "cases": [
+        {
+          "case": "patch",
+          "prompt": "Use read_repository_file with repository=\"forge\" and full paths src/forge_controller/model.py, src/forge_controller/config.py, tests/test_model_limits.py as relevant. You must call the tool before answering. Read model.py lines 1\u201340. Propose exactly one edit changing keep_alive from 5m to 2m, preserving everything else. Return only JSON {\"path\":\"src/forge_controller/model.py\",\"edits\":[{\"before\":\"exact existing text\",\"after\":\"replacement text\"}]}. Preserve source indentation and real JSON escaping.",
+          "elapsed_seconds": 6.21,
+          "fixture_sha256": {
+            "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+            "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+            "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+            "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+          },
+          "task": {
+            "id": "e51d093137cc47dc9ad9526106cbb6db",
+            "owner": "tester",
+            "agent": "implementer",
+            "status": "succeeded",
+            "created": 1791082441.883478,
+            "updated": 1791082448.044037,
+            "result": "{\"path\":\"src/forge_controller/model.py\",\"edits\":[{\"before\":\"        payload = dict(model=self.settings.model, messages=messages, stream=False, think=False,\\n                       options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0), keep_alive='5m')\",\"after\":\"        payload = dict(model=self.settings.model, messages=messages, stream=False, think=False,\\n                       options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0), keep_alive='2m')\"}]}",
+            "error": null,
+            "audit": [
+              {
+                "tool": "list_repository_files",
+                "status": "allowed",
+                "repository": "forge"
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/model.py",
+                "start_line": 1,
+                "end_line": 40
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/config.py",
+                "start_line": 1,
+                "end_line": 40
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "tests/test_model_limits.py",
+                "start_line": 1,
+                "end_line": 40
+              }
+            ]
+          },
+          "manual_review_required": true,
+          "loaded_models": {
+            "models": [
+              {
+                "name": "qwen3-coder:30b",
+                "model": "qwen3-coder:30b",
+                "size": 18864070982,
+                "digest": "06c1097efce0431c2045fe7b2e5108366e43bee1b4603a7aded8f21689e90bca",
+                "details": {
+                  "parent_model": "",
+                  "format": "gguf",
+                  "family": "qwen3moe",
+                  "families": [
+                    "qwen3moe"
+                  ],
+                  "parameter_size": "30.5B",
+                  "quantization_level": "Q4_K_M"
+                },
+                "expires_at": "2026-10-03T19:59:08.043529-07:00",
+                "size_vram": 18864070982,
+                "context_length": 4096
+              }
+            ]
+          },
+          "review": {
+            "accepted": true,
+            "finding": "Exact unique replacement; complete candidate matches intended scope and behavior. No model-output correction required.",
+            "fixture": "/private/tmp/forge-coding-patch",
+            "test_fixture_adjustment": "Existing keep_alive expectation changed from 5m to 2m in isolated test only.",
+            "verification": {
+              "passed": 84,
+              "failed": 0,
+              "scope": "full existing test suite against isolated candidate source"
+            }
+          }
+        },
+        {
+          "case": "test",
+          "prompt": "Use read_repository_file with repository=\"forge\" and full paths src/forge_controller/model.py, src/forge_controller/config.py, tests/test_model_limits.py as relevant. You must call the tool before answering. Read model.py lines 1\u201340 and tests/test_model_limits.py lines 1\u201380. Return only JSON {\"path\":\"tests/test_candidate.py\",\"content\":\"complete Python test source\"}. Write one meaningful async pytest test using the actual Ollama and Settings APIs and httpx.MockTransport. Verify Ollama.chat raises ModelError with model_unavailable when upstream returns HTTP 503. Close clients. Do not invent helpers or execute anything.",
+          "elapsed_seconds": 4.07,
+          "fixture_sha256": {
+            "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+            "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+            "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+            "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+          },
+          "task": {
+            "id": "bfe85f658783474690dcdfffb43d3e37",
+            "owner": "tester",
+            "agent": "implementer",
+            "status": "succeeded",
+            "created": 1791082448.1030662,
+            "updated": 1791082452.10669,
+            "result": "{\n  \"path\": \"tests/test_candidate.py\",\n  \"content\": \"import httpx\\nimport pytest\\nfrom unittest.mock import AsyncMock\\n\\nfrom forge_controller.config import Settings\\nfrom forge_controller.model import Ollama, ModelError\\n\\n\\n@pytest.mark.asyncio\\nasync def test_ollama_chat_model_unavailable_error():\\n    settings = Settings(database='/tmp/test.db', principals={'test': {'token': 't'*40, 'agents': ['forge'], 'services': []}})\\n    ollama = Ollama(settings)\\n    \\n    # Mock the client to return a 503 status\\n    mock_response = httpx.Response(503, text='Service Unavailable')\\n    ollama.client = AsyncMock()\\n    ollama.client.stream.return_value.__aenter__.return_value = mock_response\\n    \\n    with pytest.raises(ModelError) as exc_info:\\n        await ollama.chat([{'role': 'user', 'content': 'test'}], [])\\n    \\n    assert 'model_unavailable' in str(exc_info.value)\\n    \\n    # Close the client\\n    await ollama.client.aclose()\"\n}",
+            "error": null,
+            "audit": [
+              {
+                "tool": "list_repository_files",
+                "status": "allowed",
+                "repository": "forge"
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/model.py",
+                "start_line": 1,
+                "end_line": 40
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "tests/test_model_limits.py",
+                "start_line": 1,
+                "end_line": 74
+              }
+            ]
+          },
+          "manual_review_required": true,
+          "loaded_models": {
+            "models": [
+              {
+                "name": "qwen3-coder:30b",
+                "model": "qwen3-coder:30b",
+                "size": 18864070982,
+                "digest": "06c1097efce0431c2045fe7b2e5108366e43bee1b4603a7aded8f21689e90bca",
+                "details": {
+                  "parent_model": "",
+                  "format": "gguf",
+                  "family": "qwen3moe",
+                  "families": [
+                    "qwen3moe"
+                  ],
+                  "parameter_size": "30.5B",
+                  "quantization_level": "Q4_K_M"
+                },
+                "expires_at": "2026-10-03T19:59:12.106179-07:00",
+                "size_vram": 18864070982,
+                "context_length": 4096
+              }
+            ]
+          },
+          "review": {
+            "accepted": false,
+            "finding": "Ignores requested MockTransport. AsyncMock.stream returns a coroutine rather than an async context manager; raw Response lacks request association; original HTTP client leaked. Reject without execution or correction."
+          }
+        },
+        {
+          "case": "bug",
+          "prompt": "Use read_repository_file with repository=\"forge\" and full paths src/forge_controller/model.py, src/forge_controller/config.py, tests/test_model_limits.py as relevant. You must call the tool before answering. Read config.py lines 20\u201335. This isolated copy contains a seeded validation bug: context_length accepts booleans. Propose the smallest correct edit that rejects booleans while preserving acceptance of positive exact integers and rejection of zero, negatives, floats, strings and None. Return only JSON {\"path\":\"src/forge_controller/config.py\",\"edits\":[{\"before\":\"exact existing text\",\"after\":\"replacement text\"}]}. Do not change max_output_tokens or unrelated code.",
+          "elapsed_seconds": 4.29,
+          "fixture_sha256": {
+            "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd",
+            "src/forge_controller/config.py": "2749eec2ed7bf8cfaf2f056e1d49091a94b59357842f857e2b08fa960cfc2da5",
+            "tests/test_model_limits.py": "b64a99edc170f46e8b8b9018f4280188650f55170cb7889cdb01bce330260b1e",
+            "pyproject.toml": "8e294059dd7643bd6a923552adddfc0f37d4fb97df3d043cb9eabcbc9e93c079"
+          },
+          "task": {
+            "id": "cd8bfb7e70af43e19c382fb26a72e647",
+            "owner": "tester",
+            "agent": "implementer",
+            "status": "succeeded",
+            "created": 1791082452.184953,
+            "updated": 1791082456.468071,
+            "result": "{\n    \"path\": \"src/forge_controller/config.py\",\n    \"edits\": [\n        {\n            \"before\": \"        if not isinstance(self.context_length, int) or self.context_length <= 0:\\n            raise ValueError(\\\"context_length must be a positive integer\\\")\",\n            \"after\": \"        if type(self.context_length) is not int or self.context_length <= 0:\\n            raise ValueError(\\\"context_length must be a positive integer\\\")\"\n        }\n    ]\n}",
+            "error": null,
+            "audit": [
+              {
+                "tool": "list_repository_files",
+                "status": "allowed",
+                "repository": "forge"
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/model.py",
+                "start_line": 1,
+                "end_line": 45
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/config.py",
+                "start_line": 1,
+                "end_line": 50
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "tests/test_model_limits.py",
+                "start_line": 1,
+                "end_line": 50
+              },
+              {
+                "tool": "read_repository_file",
+                "status": "allowed",
+                "repository": "forge",
+                "path": "src/forge_controller/config.py",
+                "start_line": 20,
+                "end_line": 35
+              }
+            ]
+          },
+          "manual_review_required": true,
+          "loaded_models": {
+            "models": [
+              {
+                "name": "qwen3-coder:30b",
+                "model": "qwen3-coder:30b",
+                "size": 18864070982,
+                "digest": "06c1097efce0431c2045fe7b2e5108366e43bee1b4603a7aded8f21689e90bca",
+                "details": {
+                  "parent_model": "",
+                  "format": "gguf",
+                  "family": "qwen3moe",
+                  "families": [
+                    "qwen3moe"
+                  ],
+                  "parameter_size": "30.5B",
+                  "quantization_level": "Q4_K_M"
+                },
+                "expires_at": "2026-10-03T19:59:16.467262-07:00",
+                "size_vram": 18864070982,
+                "context_length": 4096
+              }
+            ]
+          },
+          "review": {
+            "accepted": true,
+            "finding": "Exact unique replacement; complete candidate matches intended scope and behavior. No model-output correction required.",
+            "fixture": "/private/tmp/forge-coding-bug",
+            "test_fixture_adjustment": null,
+            "verification": {
+              "passed": 84,
+              "failed": 0,
+              "scope": "full existing test suite against isolated candidate source"
+            }
+          }
+        }
+      ],
+      "manifest": {
+        "name": "qwen3-coder:30b",
+        "model": "qwen3-coder:30b",
+        "modified_at": "2026-10-03T19:54:00.903721559-07:00",
+        "size": 18556700761,
+        "digest": "06c1097efce0431c2045fe7b2e5108366e43bee1b4603a7aded8f21689e90bca",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3moe",
+          "families": [
+            "qwen3moe"
+          ],
+          "parameter_size": "30.5B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 262144,
+          "embedding_length": 2048
+        },
+        "capabilities": [
+          "completion",
+          "tools"
+        ]
+      },
+      "source_stable": true
+    }
+  ]
+}

@@ -13,3 +13,5 @@ The controller and model runtime can run on different hosts. Development current
 Model context/output limits are configurable at startup. See the [reviewed implementation experiment](docs/experiments/implementer-model-limits.md) for local-model contributions, corrections, and verification.
 
 [Reviewed examples and evaluation loop](docs/feedback-loop.md) provides scoped reference retrieval and repeatable checks with required senior review. It does not automatically train or promote models.
+
+The [coding-model comparison](docs/experiments/coding-model-comparison-2026-10-03.md) records reviewed patch, test-writing and seeded-bug results for Qwen3 8B and Qwen3-Coder 30B, with a repeatable isolated evaluation runner.

@@ -15,7 +15,17 @@ class Ollama:
         try:
             response = await self.client.get('/api/tags', timeout=3)
             response.raise_for_status()
-            installed = {m.get('name') for m in response.json()['models']}
+            data = response.json()
+            if not isinstance(data, dict) or 'models' not in data:
+                return False
+            models = data['models']
+            if not isinstance(models, list):
+                return False
+            installed = set()
+            for m in models:
+                if not isinstance(m, dict) or not isinstance(m.get('name'), str):
+                    return False
+                installed.add(m['name'])
             required = {self.settings.model_for(agent) for agent in ('forge', 'repository_analyst', 'implementer')}
             return required.issubset(installed)
         except (httpx.HTTPError, ValueError, KeyError, TypeError):

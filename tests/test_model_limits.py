@@ -12,6 +12,31 @@ def make_settings(tmp_path, **overrides):
         'tester': {'token': 't'*40, 'agents': ['forge'], 'services': []}}, **overrides)
 
 
+@pytest.mark.parametrize('models', [None, 'unexpected', [None], [123], [{'name':[]}], [{'name':None}], [{}],
+    [{'name':'qwen3:8b'},None], [{'name':'qwen3:8b'},{'name':[]}], []])
+async def test_readiness_rejects_malformed_models(tmp_path, models):
+    adapter=Ollama(make_settings(tmp_path))
+    await adapter.client.aclose()
+    adapter.client=httpx.AsyncClient(base_url='http://model',transport=httpx.MockTransport(
+        lambda request:httpx.Response(200,json={'models':models})))
+    try:
+        assert await adapter.ready() is False
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.parametrize('installed,ready', [(['qwen3:8b'],False),(['qwen3:8b','qwen3-coder:30b'],True)])
+async def test_readiness_requires_all_role_models(tmp_path,installed,ready):
+    adapter=Ollama(make_settings(tmp_path,role_models={'implementer':'qwen3-coder:30b'}))
+    await adapter.client.aclose()
+    adapter.client=httpx.AsyncClient(base_url='http://model',transport=httpx.MockTransport(
+        lambda request:httpx.Response(200,json={'models':[{'name':name} for name in installed]})))
+    try:
+        assert await adapter.ready() is ready
+    finally:
+        await adapter.close()
+
+
 @pytest.mark.parametrize('overrides,context,output', [
     ({},4096,512),
     ({'context_length':8192,'max_output_tokens':1024},8192,1024),

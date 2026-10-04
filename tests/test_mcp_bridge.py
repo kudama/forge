@@ -90,6 +90,14 @@ async def test_bounded_upstream_failures(tmp_path,kind,error):
         assert 'private connection detail' not in str(result.content)
 
 
+async def test_missing_source_grant_is_actionable(tmp_path):
+    transport=httpx.MockTransport(lambda request:httpx.Response(403,json={'detail':'source_reads_required'}))
+    async with Client(create_bridge(BridgeSettings(credential(tmp_path)),transport)) as client:
+        result=await client.call_tool('forge_submit_task',{'prompt':'inspect','agent':'repository_analyst'})
+        assert result.is_error and 'source_reads_required' in str(result.content)
+        assert 'explicitly include read_repository_file' in str(result.content)
+
+
 async def test_protocol_to_real_controller_authorization_lifecycle_and_disconnect(tmp_path):
     config=Settings(database=tmp_path/'tasks.sqlite3',principals={
         'bridge':{'token':'t'*40,'agents':['forge'],'services':[]},

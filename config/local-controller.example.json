@@ -1,0 +1,9 @@
+{
+  "FORGE_PRINCIPALS_FILE": ".secrets/principals.json",
+  "FORGE_REPOSITORIES_FILE": ".secrets/repositories.json",
+  "FORGE_EXAMPLES_FILE": "examples/reviewed.json",
+  "FORGE_DATABASE": "state/tasks.sqlite3",
+  "FORGE_MODEL": "qwen3:8b",
+  "FORGE_ROLE_MODELS": "{\"implementer\":\"qwen3-coder:30b\"}",
+  "FORGE_TOOL_ROUNDS": "8"
+}

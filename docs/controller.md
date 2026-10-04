@@ -39,14 +39,37 @@ OLLAMA_HOST=127.0.0.1:11434 OLLAMA_NO_CLOUD=1 OLLAMA_NUM_PARALLEL=1 \
 OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_CONTEXT_LENGTH=4096 ollama serve
 ```
 
-Download `qwen3:8b` if missing (`ollama pull qwen3:8b`). Do not run a second Ollama instance on the same port. Then start the controller:
+Download `qwen3:8b` and `qwen3-coder:30b` if missing. Do not run a second Ollama
+instance on the same port. Copy the reviewed local profile once, preserving any
+existing operator configuration:
 
 ```sh
-export FORGE_PRINCIPALS_FILE="$PWD/.secrets/principals.json"
-export FORGE_DATABASE="$PWD/state/tasks.sqlite3"
-.venv/bin/uvicorn forge_controller.app:app --host 127.0.0.1 --port 8787 \
-  --workers 1 --no-access-log
+test -e .secrets/local-controller.json || cp config/local-controller.example.json .secrets/local-controller.json
+chmod 600 .secrets/local-controller.json
+.venv/bin/python scripts/controller.py start
 ```
+
+The launcher validates the private configuration, starts one foreground controller
+on loopback, and records its process under ignored `state/`. The profile preserves
+8B analysis, the coding-model implementer, explicit source grants and reviewed
+examples. Paths are relative to the checkout, independent of the invoking directory.
+Credentials remain in the separate private principal file; the profile contains
+only settings and file paths. Remove optional manifest/example settings if you
+have not configured those features. The launcher starts no Ollama process and
+installs no login/background service. Stop an older manually launched controller
+before first adopting it. Logs remain in the start terminal.
+
+From another terminal, use:
+
+```sh
+.venv/bin/python scripts/controller.py status
+.venv/bin/python scripts/controller.py stop
+```
+
+Ctrl+C in the start terminal also stops the controller cleanly. Duplicate managed
+starts are rejected. Stop verifies the recorded process command before signaling
+it and never stops an unrelated Ollama instance. Ollama remains available; unload
+models with `ollama stop qwen3:8b` and `ollama stop qwen3-coder:30b` when finished.
 
 In another terminal from this checkout:
 

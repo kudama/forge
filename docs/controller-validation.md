@@ -1,5 +1,14 @@
 # Initial controller validation
 
+Final standalone prototype check, **2026-10-04**: all 99 automated tests pass.
+The saved local profile and foreground launcher were verified for start, status,
+duplicate-start rejection, clean stop and restart. Final live authentication,
+both role routes, queued cancellation, readiness and explicit model unloading
+are recorded in [wrap-up evidence](experiments/prototype-wrap-up-2026-10-04.json).
+The controller remains manually started; MCP/ChatGPT integration, remote access,
+domain connectors and deployment acceptance are later milestones. Earlier
+validation counts below describe their respective implementation stages.
+
 Verified 2026-10-03 on the Mac Studio, Python 3.14.8. Ubuntu deployment remains untested.
 
 - 17 automated tests pass: authentication and task ownership; strict input and capability grants; permitted synthetic tool execution; denied model proposals; tool-loop limits; queued/running cancellation; capacity and deadlines; readiness; exclusive database ownership; persisted results and interrupted-task recovery; private credential permissions; body limits and deletion; model response size/HTTP/JSON errors; worker recovery after a model failure; transaction-consistent SQLite backup/restore and rejection of a future schema version.

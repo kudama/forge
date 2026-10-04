@@ -1,30 +1,51 @@
 # Forge
 
-Forge builds and maintains shared software for the personal AI platform. Domain behavior stays in the Jarvis, Thoth, Hermes, and Bear repositories.
+Forge is a prototype execution controller for local language models. It gives
+AI clients a bounded way to delegate repository analysis and implementation
+proposals, while keeping tool permissions and review explicit.
+
+## What it does
+
+- Coordinates local inference through Ollama, with configurable models per role.
+- Accepts authenticated tasks and keeps results isolated by caller.
+- Enforces explicit repository file manifests and read-only tool grants.
+- Provides deadlines, cancellation, execution limits, and persistent SQLite state.
+- Offers an optional local MCP bridge for desktop AI clients.
+- Supports reviewed reference examples and repeatable model evaluations.
+
+Repository analysts produce source-grounded proposals. Implementers propose
+patches. The controller has no file-write, shell-command, or patch-application
+tool; an operator reviews changes and runs independent checks before applying
+them. A completed task is not a guarantee that its output is correct.
+
+## Getting started
+
+The prototype uses Python 3.12 or newer and an existing Ollama installation.
+Follow [setup and operation](docs/controller.md) to install the Python environment,
+configure private credentials and source grants, select installed models, and
+start the controller. Credentials and task state stay outside version control.
+
+For desktop integration, see the [local MCP bridge](docs/mcp.md).
+For startup and recovery on macOS, see [service management](docs/mac-services.md).
+
+## Architecture and validation
+
+The controller and inference runtime are separate components and can run on
+separate hosts. The current validated environment is macOS; deployment to Ubuntu
+has not yet been validated. The default services bind to loopback. Remote access
+requires a separately reviewed authentication and transport setup.
+
+[Architecture](docs/controller-architecture.md) ·
+[Validation](docs/controller-validation.md) ·
+[Reviewed examples and evaluation](docs/feedback-loop.md)
+
+Model outputs and repository content are untrusted. Runtime grants remain the
+source of authority; prompts cannot expand them. Do not expose raw model or
+controller listeners directly to the public internet.
 
 ## License and support
 
-Forge is available under the [MIT License](LICENSE), including for commercial use.
-This is a personal prototype provided as-is. There is no guaranteed support,
-maintenance schedule, response time, or service availability. Third-party
-dependencies and model weights retain their own licenses.
-
-## Controller prototype
-
-A small Python execution service coordinates local inference and explicitly permitted tools. It supports authenticated task submission, owner-scoped results, cancellation, deadlines, and persistent task records. Implemented tools provide synthetic read-only service status and explicitly granted source-file listing/reading for a local repository analyst and patch-only implementer. See the [first analyst experiment](docs/experiments/repository-analyst-2026-10-03.md).
-
-[Setup and operation](docs/controller.md) · [Architecture decision](docs/controller-architecture.md) · [Validation](docs/controller-validation.md)
-
-The controller and model runtime can run on different hosts. Development currently uses the Mac Studio; deployment to Ubuntu is supported by the design but has not yet been tested there. This service is not connected to ChatGPT and does not implement the domain agents or real household connectors.
-
-The optional [local MCP bridge](docs/mcp.md) connects desktop clients to the
-controller's authenticated task API using a dedicated scoped principal. Remote
-ChatGPT/phone access and domain connectors remain later milestones.
-
-Model context/output limits are configurable at startup. See the [reviewed implementation experiment](docs/experiments/implementer-model-limits.md) for local-model contributions, corrections, and verification.
-
-[Reviewed examples and evaluation loop](docs/feedback-loop.md) provides scoped reference retrieval and repeatable checks with required senior review. It does not automatically train or promote models.
-
-The [coding-model comparison](docs/experiments/coding-model-comparison-2026-10-03.md) records reviewed patch, test-writing and seeded-bug results for Qwen3 8B and Qwen3-Coder 30B, with a repeatable isolated evaluation runner.
-
-[Per-role routing](docs/experiments/role-model-routing-2026-10-03.md) lets operator configuration select a coding model for implementer proposals while retaining the lightweight model for other roles. Tasks record the selected model; missing models fail explicitly.
+Forge is available under the [MIT License](LICENSE), including for commercial
+use. This prototype is provided as-is, with no guaranteed support, maintenance
+schedule, response time, or service availability. Third-party dependencies and
+model weights retain their own licenses.

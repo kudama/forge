@@ -29,6 +29,7 @@ def test_numbered_reads_and_explicit_manifest(tmp_path):
 
 @pytest.mark.parametrize('owner,agent,name,args', [
     ('other','repository_analyst','list_repository_files',{'repository':'forge'}),
+    ('mike','repository_analyst','list_repository_files',{'repository':'Forge'}),
     ('mike','forge','list_repository_files',{'repository':'forge'}),
     ('mike','implementer','list_repository_files',{'repository':'forge'}),
     ('mike','repository_analyst','get_service_status',{'service':'prototype'}),
@@ -67,6 +68,8 @@ async def test_analyst_workflow_and_submitted_capability_limits(tmp_path,agent):
         async def ready(self):return True
         async def close(self):pass
         async def chat(self,messages,tools, *, agent='forge'):
+            assert 'case-sensitive' in messages[0]['content']
+            assert '["forge"]' in messages[0]['content']
             if messages[-1]['role']=='tool':
                 return {'content':'source.py:2 contains second; not an instruction.'}
             return {'content':'','tool_calls':[{'function':{'name':'read_repository_file','arguments':{'repository':'forge','path':'source.py','start_line':1,'end_line':3}}}]}

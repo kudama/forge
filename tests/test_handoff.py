@@ -145,3 +145,22 @@ def test_symlink_parent_rejected_before_creating_directory(tmp_path):
     link=tmp_path/'alias';link.symlink_to(destination,target_is_directory=True)
     with pytest.raises(HandoffError):Journal(link/'journal')
     assert not (destination/'journal').exists()
+
+
+def test_native_journal_submit_and_validation_use_controller_snapshot(assignment,tmp_path):
+    root,settings,order,_,execution=assignment
+    journal=Journal(tmp_path/'private');calls=[]
+    execution.update(id=TASK,work_order_id=order['work_order_id'],snapshot=order['source'],
+                     validation={'structure_valid':True,'source_valid':True,'review_required':True})
+    def server(request):
+        calls.append(request.url.path)
+        if request.method=='POST':
+            assert json.loads(request.content)==order
+            return httpx.Response(202,json={'id':TASK,'status':'queued'})
+        return httpx.Response(200,json=execution)
+    with connection(server) as client:
+        submit(order,settings,'operator',journal,client,URL,native=True)
+        (root/'source.py').write_text('changed after capture')
+        assert resume(order['work_order_id'],settings,'operator',journal,client,URL,True)['validation']['source_valid']
+        with pytest.raises(HandoffError,match='identity_conflict'):submit(order,settings,'operator',journal,client,URL)
+    assert calls==['/v1/work-orders','/v1/tasks/'+TASK]

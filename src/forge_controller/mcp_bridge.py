@@ -63,6 +63,7 @@ class StrictServer(MCPServer):
 
     async def call_tool(self, name, arguments, context=None):
         allowed = {'forge_health':set(), 'forge_submit_task':{'prompt','agent','tools'},
+                   'forge_submit_work_order':{'order'},
                    'forge_get_task':{'task_id'}, 'forge_cancel_task':{'task_id'}}
         if name in allowed and set(arguments or {}) - allowed[name]:
             raise ToolError('invalid_arguments')
@@ -141,6 +142,11 @@ def create_bridge(settings, transport=None):
     async def forge_submit_task(prompt: Prompt, agent: Agent = 'forge', tools: Capabilities | None = None) -> CallToolResult:
         """Submit a bounded task; returns ID immediately. Analyst/implementer need read_repository_file. No writes or commands. Never retry a failed submission blindly: it may already have been accepted."""
         return await request('POST', '/v1/tasks', {'prompt':prompt, 'agent':agent, 'tools':tools or []})
+
+    @server.tool(annotations=submit)
+    async def forge_submit_work_order(order: dict) -> CallToolResult:
+        """Submit a Forge-issued order with controller-enforced immutable source scope and result validation. No writes/commands. Duplicate IDs are rejected; never retry an uncertain submission blindly."""
+        return await request('POST', '/v1/work-orders', order)
 
     @server.tool(annotations=read)
     async def forge_get_task(task_id: TaskID) -> CallToolResult:

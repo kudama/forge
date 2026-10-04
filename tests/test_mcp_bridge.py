@@ -50,7 +50,7 @@ async def test_catalog_validation_and_sanitized_failures(tmp_path):
         return httpx.Response(401,text='secret upstream detail')
     async with Client(create_bridge(BridgeSettings(credential(tmp_path)),httpx.MockTransport(respond))) as client:
         tools={t.name:t for t in (await client.list_tools()).tools}
-        assert set(tools)=={'forge_health','forge_submit_task','forge_get_task','forge_cancel_task'}
+        assert set(tools)=={'forge_health','forge_submit_task','forge_submit_work_order','forge_get_task','forge_cancel_task'}
         assert all(t.input_schema['additionalProperties'] is False for t in tools.values())
         assert tools['forge_health'].annotations.read_only_hint is True
         assert tools['forge_submit_task'].annotations.read_only_hint is False

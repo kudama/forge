@@ -1,0 +1,68 @@
+{
+  "work_order_id": "62e12e924fb54f6fbe0cc795929da899",
+  "controller_task_id": "36f404d66f274faf94224bdda847b8b5",
+  "source_revision": "a4b012c3007032e9c1830c552fc22aba6220b5bc",
+  "snapshot": {
+    "repository_id": "forge",
+    "revision": "a4b012c3007032e9c1830c552fc22aba6220b5bc",
+    "files": [
+      {
+        "path": "src/forge_controller/model.py",
+        "sha256": "ecda06a387257abd806e9778d7f56c299f084f472831ef15d483cf757b3216a9"
+      }
+    ]
+  },
+  "execution_status": "succeeded",
+  "worker_result": {
+    "schema_version": 1,
+    "work_order_id": "62e12e924fb54f6fbe0cc795929da899",
+    "outcome": "proposal",
+    "summary": "The response byte limit is 65536 bytes, and the corresponding error identifier is 'ModelError' with the message 'model_response_too_large'.",
+    "evidence": [
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 46,
+        "end_line": 46,
+        "claim": "The response byte limit is set to 65536 bytes."
+      },
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 47,
+        "end_line": 47,
+        "claim": "The corresponding error identifier is 'ModelError' with the message 'model_response_too_large'."
+      }
+    ],
+    "changes": [],
+    "uncertainties": [],
+    "checks_not_run": [
+      "tests"
+    ]
+  },
+  "audit": [
+    {
+      "tool": "model_selection",
+      "status": "selected",
+      "agent": "repository_analyst",
+      "model": "qwen3:8b"
+    },
+    {
+      "tool": "read_repository_file",
+      "status": "allowed",
+      "repository": "forge",
+      "path": "src/forge_controller/model.py",
+      "start_line": 40,
+      "end_line": 57
+    }
+  ],
+  "validation": {
+    "structure_valid": true,
+    "source_valid": true,
+    "review_required": true
+  },
+  "native_work_order_enforcement": true,
+  "environment": "isolated ASGI controller using real local Ollama through MCP",
+  "review_status": "accepted_analysis",
+  "independent_review": "Forge checked model.py lines 46-47: limit 65536 bytes; raised class ModelError, identifier model_response_too_large. No changes proposed.",
+  "tests_passed": 241,
+  "installed_wheel_contract_validation": "passed"
+}

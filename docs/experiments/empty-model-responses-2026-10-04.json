@@ -1,0 +1,64 @@
+{
+  "issue": 8,
+  "source_revision": "8960046f44164ccc0df2947a4326ee3e11344582",
+  "model": "qwen3-coder:30b",
+  "attempts": [
+    {
+      "task_id": "1fb475fcf75340899186e74dc18e76ea",
+      "audit": [
+        {
+          "tool": "model_selection",
+          "status": "selected",
+          "agent": "implementer",
+          "model": "qwen3-coder:30b"
+        },
+        {
+          "tool": "read_repository_file",
+          "status": "allowed",
+          "repository": "forge",
+          "path": "src/forge_controller/model.py",
+          "start_line": 1,
+          "end_line": 57
+        },
+        {
+          "tool": "read_repository_file",
+          "status": "allowed",
+          "repository": "forge",
+          "path": "src/forge_controller/model.py",
+          "start_line": 34,
+          "end_line": 54
+        }
+      ],
+      "review": "Rejected: truncated JSON proposal; no changes applied."
+    },
+    {
+      "task_id": "0b77ce63ac704e7fb3626e7c2321e62f",
+      "audit": [
+        {
+          "tool": "model_selection",
+          "status": "selected",
+          "agent": "implementer",
+          "model": "qwen3-coder:30b"
+        },
+        {
+          "tool": "read_repository_file",
+          "status": "allowed",
+          "repository": "forge",
+          "path": "src/forge_controller/model.py",
+          "start_line": 45,
+          "end_line": 54
+        }
+      ],
+      "proposal": {
+        "path": "src/forge_controller/model.py",
+        "old": "            message = data['message']\n            if not isinstance(message, dict) or not isinstance(message.get('content', ''), str):\n                raise ModelError('invalid_model_response')\n            return message",
+        "new": "            message = data['message']\n            if not isinstance(message, dict):\n                raise ModelError('invalid_model_response')\n            content = message.get('content', '')\n            tool_calls = message.get('tool_calls', [])\n            if not isinstance(content, str) or (not content.strip() and not isinstance(tool_calls, list)):\n                raise ModelError('invalid_model_response')\n            return message"
+      },
+      "review": "Exact source match verified. Five independent regression cases failed on unmodified proposal; senior review corrected list-type and empty-list condition."
+    }
+  ],
+  "baseline_empty_final_failures": 4,
+  "regression_tests_passed": 148,
+  "controller_failure_path_verified": true,
+  "worker_writes_or_commands": false
+}

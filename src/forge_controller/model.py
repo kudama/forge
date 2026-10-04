@@ -47,7 +47,12 @@ class Ollama:
                         raise ModelError('model_response_too_large')
                 data = json.loads(body)
             message = data['message']
-            if not isinstance(message, dict) or not isinstance(message.get('content', ''), str):
+            if not isinstance(message, dict):
+                raise ModelError('invalid_model_response')
+            content = message.get('content', '')
+            tool_calls = message.get('tool_calls', [])
+            if (not isinstance(content, str) or not isinstance(tool_calls, list)
+                or (not content.strip() and not tool_calls)):
                 raise ModelError('invalid_model_response')
             return message
         except (httpx.HTTPError, ValueError, KeyError, TypeError):

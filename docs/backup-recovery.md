@@ -1,4 +1,4 @@
-# Prototype backup and recovery
+# Controller backup and recovery
 
 Run from the Forge checkout:
 
@@ -58,7 +58,7 @@ The test used an isolated ASGI instance, not a reboot or production cutover.
 The backup script is covered by regression checks for live snapshots, overwrite
 refusal, checksum damage, permissive files and symlink substitution.
 
-This snapshot is on the same disk. Include `state/backups/` in the user's secure
+This snapshot is on the same disk. Include `state/backups/` in a secure
 off-host backup and verify restoration from that destination before relying on
 it for disk-loss recovery. Off-host copying and existing backup coverage were
 not verified here. Retain only the snapshots needed for recovery, respecting task

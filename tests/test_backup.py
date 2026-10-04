@@ -53,3 +53,17 @@ def test_restore_verification_rejects_tampering(prototype,tmp_path,mutation):
         outside=tmp_path/'outside';outside.write_bytes(p.read_bytes());outside.chmod(0o600)
         p.unlink();p.symlink_to(outside)
     with pytest.raises(ValueError):backup.verify(target)
+
+
+@pytest.mark.parametrize('relative', ['examples/reviewed.json', 'requirements.lock'])
+def test_creation_rejects_symlinked_public_inputs(prototype, tmp_path, relative):
+    store = Store(prototype/'state/tasks.sqlite3')
+    store.close()
+    source = prototype/relative
+    outside = tmp_path/'outside'
+    outside.write_bytes(source.read_bytes())
+    source.unlink()
+    source.symlink_to(outside)
+    with pytest.raises(ValueError, match='regular backup input'):
+        backup.create(tmp_path/'snapshot')
+    assert not (tmp_path/'snapshot').exists()

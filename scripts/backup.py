@@ -1,4 +1,4 @@
-"""Create and verify private, consistent backups of this Mac prototype."""
+"""Create and verify private, consistent backups of a local controller deployment."""
 import argparse
 import hashlib
 import json
@@ -53,6 +53,9 @@ def create(destination):
                **{name:ROOT/name for name in ('requirements.lock','requirements-mcp.lock','pyproject.toml')}}
     for name in ('principals.json','repositories.json','mcp-token.json'):
         private_file(sources[name])
+    for path in sources.values():
+        if not stat.S_ISREG(path.lstat().st_mode):
+            raise ValueError('Expected a regular backup input')
     hashes = {name:digest(path) for name,path in sources.items()}
     temporary = Path(tempfile.mkdtemp(prefix='.forge-backup-', dir=destination.parent))
     try:

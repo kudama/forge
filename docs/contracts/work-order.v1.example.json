@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "work_order_id": "202b9b23f1e14448a10fc74c254ce3c6",
+  "issue_url": "https://github.com/kudama/forge/issues/15",
+  "source": {
+    "repository_id": "forge",
+    "revision": "6209cfc9cfcb761dc8d38923a4d7aea92494c256",
+    "files": [
+      {
+        "path": "src/forge_controller/model.py",
+        "sha256": "ecda06a387257abd806e9778d7f56c299f084f472831ef15d483cf757b3216a9"
+      }
+    ]
+  },
+  "objective": "Read model.py and identify the model response-size bound and error identifier. Return source-grounded analysis only.",
+  "acceptance_criteria": [
+    "Identify the byte limit and corresponding error identifier with exact line evidence.",
+    "No code changes or claims that tests ran."
+  ],
+  "agent": "repository_analyst",
+  "tools": [
+    "read_repository_file"
+  ],
+  "runtime_limits": {
+    "timeout_seconds": 60.0,
+    "tool_calls": 8,
+    "context_tokens": 4096,
+    "output_tokens": 512
+  },
+  "output_contract": "worker-result.v1",
+  "review_owner": "forge",
+  "prohibited_actions": [
+    "write_files",
+    "execute_commands",
+    "change_permissions",
+    "merge",
+    "deploy",
+    "retrieve_secrets"
+  ]
+}

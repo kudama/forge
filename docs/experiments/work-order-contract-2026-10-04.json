@@ -1,0 +1,61 @@
+{
+  "work_order_id": "202b9b23f1e14448a10fc74c254ce3c6",
+  "issue_url": "https://github.com/kudama/forge/issues/15",
+  "controller_task_id": "e8e5f1e310e448ffa80cc6ab2c6c5e9a",
+  "source_revision": "6209cfc9cfcb761dc8d38923a4d7aea92494c256",
+  "audit": [
+    {
+      "tool": "model_selection",
+      "status": "selected",
+      "agent": "repository_analyst",
+      "model": "qwen3:8b"
+    },
+    {
+      "tool": "read_repository_file",
+      "status": "allowed",
+      "repository": "forge",
+      "path": "src/forge_controller/model.py",
+      "start_line": 40,
+      "end_line": 57
+    }
+  ],
+  "execution_status": "succeeded",
+  "review_status": "accepted_analysis",
+  "worker_result": {
+    "schema_version": 1,
+    "work_order_id": "202b9b23f1e14448a10fc74c254ce3c6",
+    "outcome": "proposal",
+    "summary": "The model response size is limited to 65536 bytes, and the corresponding error identifier is 'model_response_too_large'.",
+    "evidence": [
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 46,
+        "end_line": 47,
+        "claim": "The response size is limited to 65536 bytes, and exceeding this limit raises a 'ModelError' with the identifier 'model_response_too_large'."
+      }
+    ],
+    "changes": [],
+    "uncertainties": [],
+    "checks_not_run": [
+      "tests"
+    ]
+  },
+  "schema_valid": true,
+  "independent_review": {
+    "source_revision_and_hash_verified": true,
+    "exact_line_claims_verified": true,
+    "only_declared_tools_used": true,
+    "analyst_changes_empty": true,
+    "no_worker_tests_claimed": true
+  },
+  "schema_negative_checks": [
+    "path_escape",
+    "wrong_revision",
+    "shell_tool",
+    "missing_read_tool",
+    "zero_limit",
+    "unknown_work_order_field",
+    "unknown_worker_result_field"
+  ],
+  "controller_native_contract_enforcement": false
+}

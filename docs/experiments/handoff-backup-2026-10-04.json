@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-04",
+  "manifest_version": 2,
+  "task_count": 34,
+  "handoff_count": 1,
+  "checksums_and_database_integrity": "passed",
+  "isolated_journal_restoration": "exact records preserved",
+  "accepted_submission_replay": "blocked; saved receipt returned without HTTP",
+  "uncertain_submission_replay": "blocked in regression tests for submitting and submission_unknown",
+  "legacy_version_1_verification": "passed; handoff_count null",
+  "tests_passed": 218,
+  "live_state_replaced": false,
+  "off_host_restore_verified": false
+}

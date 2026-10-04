@@ -113,11 +113,56 @@ suite passes 188 tests, including 34 handoff regression cases.
 
 ## Next implementation boundary
 
-The Forge-side validator/compiler has no GitHub polling or scheduler. Trial order
-and attempt/review links stay in private state; automatic durable handoff storage
-and recovery are not implemented. Preserve existing submission and ownership
+The Forge-side validator/compiler has no GitHub polling or scheduler. Orders and execution links stay in private state. The explicit journal below
+persists submissions and supports polling after a process restart. Preserve existing submission and ownership
 behavior. Controller-native work orders and idempotent submission
 need separate designs and migrations rather than prompt-only claims of enforcement.
 
 The compatibility trial uses [issue #15](https://github.com/kudama/forge/issues/15)
 and [review evidence](experiments/work-order-contract-2026-10-04.json).
+
+## Durable explicit handoffs
+
+`scripts/handoff.py` compiles and submits an order through the existing authenticated
+loopback task API, then saves its receipt. It uses existing HTTPX and JSON Schema
+dependencies. Use the same controller configuration and principal as the compiler.
+
+```sh
+.venv/bin/python scripts/handoff.py submit /private/path/order.json --principal forge_mcp
+.venv/bin/python scripts/handoff.py status WORK_ORDER_ID --principal forge_mcp
+.venv/bin/python scripts/handoff.py validate WORK_ORDER_ID --principal forge_mcp
+```
+
+The default journal is `state/handoffs` (mode 700), with atomic mode-600 records
+and a process lock. Orders, controller identity, owner, task IDs and fetched
+execution records persist; bearer tokens do not. The CLI prints IDs, status and
+validation verdicts rather than task content. `status` polls once, so reopening a
+process resumes tracking without launching work. `validate` fetches authenticated
+execution and repeats the existing source/result gates. Forge review is still
+required; no patches are applied and no issue status changes automatically.
+
+A durable `submitting` record is written before the HTTP request. An accepted
+receipt changes it to `accepted`. Repeating that order returns its saved receipt
+without POSTing again; changing the order, owner or controller under the same ID
+is rejected. Missing/malformed receipts, HTTP failures and interrupted submissions
+remain `submission_unknown` and cannot be replayed. Even explicit HTTP rejection
+is conservatively recorded as uncertain. Polling errors preserve the known receipt.
+
+This is client-side duplicate prevention, not controller idempotency or exactly-once
+execution. If acceptance may have occurred but no task ID was saved, an operator
+must reconcile the controller's private audit/state before authorizing replacement
+work. Do not delete the journal or issue a new ID merely to bypass uncertainty.
+There is no automatic reconciliation or retry command. Loss of the journal also
+loses duplicate protection. Keep this journal with private backups: the existing
+`scripts/backup.py` bundle does not yet include it, so copy the journal separately
+while no handoff process is running. Records may contain sensitive prompts/results.
+
+Source pinning still requires the current checkout to match the order. Tracking
+status works after checkout changes; result validation rejects stale source.
+Native controller snapshots, idempotent submission and automated scheduling remain
+separate implementation boundaries.
+
+The [live durable-handoff trial](experiments/durable-handoff-2026-10-04.json)
+used Qwen3:8b, resumed polling through separate CLI processes, returned the saved
+receipt on duplicate submission, and produced independently verified source-line
+evidence. The optional-tooling suite passes 209 tests, including 21 journal cases.

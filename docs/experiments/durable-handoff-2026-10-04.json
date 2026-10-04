@@ -1,0 +1,57 @@
+{
+  "work_order_id": "b43cb35596a84a0db2851a988b33444d",
+  "controller_task_id": "fb65be814cef4544bb53ebcc9c6befba",
+  "source_revision": "8d1608773b3a7d156c633018c5ebeaa6b3b584ea",
+  "execution_status": "succeeded",
+  "worker_result": {
+    "schema_version": 1,
+    "work_order_id": "b43cb35596a84a0db2851a988b33444d",
+    "outcome": "proposal",
+    "summary": "The response byte limit is 65536 bytes, and the corresponding error identifier is 'model_response_too_large'.",
+    "evidence": [
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 46,
+        "end_line": 46,
+        "claim": "The response byte limit is set to 65536 bytes."
+      },
+      {
+        "path": "src/forge_controller/model.py",
+        "start_line": 47,
+        "end_line": 47,
+        "claim": "The corresponding error identifier is 'model_response_too_large'."
+      }
+    ],
+    "changes": [],
+    "uncertainties": [],
+    "checks_not_run": [
+      "tests"
+    ]
+  },
+  "audit": [
+    {
+      "tool": "model_selection",
+      "status": "selected",
+      "agent": "repository_analyst",
+      "model": "qwen3:8b"
+    },
+    {
+      "tool": "read_repository_file",
+      "status": "allowed",
+      "repository": "forge",
+      "path": "src/forge_controller/model.py",
+      "start_line": 40,
+      "end_line": 57
+    }
+  ],
+  "validation": {
+    "structure_valid": true,
+    "source_valid": true,
+    "review_required": true
+  },
+  "separate_process_polling": true,
+  "duplicate_submission_returned_same_receipt": true,
+  "review_status": "accepted_analysis",
+  "native_work_order_enforcement": false,
+  "independent_review": "Forge inspected model.py lines 46-47 and confirmed both claims; no changes proposed or applied."
+}

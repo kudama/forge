@@ -110,12 +110,26 @@ cancellation and explicit model unloading. See
 The legacy initialize handshake was also verified with protocol `2025-11-25`,
 tool discovery and readiness, alongside the SDK's current default handshake.
 
-The user intends occasional initiation from ChatGPT on a phone. That needs a
-separate authenticated remote MCP connection or a supported private tunnel;
-phone/web ChatGPT cannot use this local stdio registration. Reuse the controller
-and its scopes, but design remote identity, transport, endpoint availability and
-revocation before enabling it. No remote endpoint, tunnel, OAuth setup or phone
-connection is installed by this local milestone. Proxmox is not a prerequisite
+The user intends occasional initiation from ChatGPT on a phone. As checked on
+2026-10-04, [OpenAI documents custom MCP apps as web-only](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt).
+A tunnel does not enable this workflow in the native ChatGPT mobile app. Verify
+the intended ChatGPT surface and account permissions before provisioning remote
+access; phone-browser compatibility has not been tested. Supported ChatGPT web
+connections can use [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)
+with an outbound connection from the Mac and no public origin listener.
+
+Cloudflare Tunnel is a candidate for remote access to future platform web apps.
+For private apps, pair it with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/setup/secure-private-apps/private-web-app/)
+and a narrow allow policy. Publish only the intended application, keep Ollama and
+the controller private, and retain controller authorization and task ownership
+behind the application. Browser login alone is not an established ChatGPT MCP
+authentication integration; validate that separately if this route is chosen.
+An authenticated mobile web task screen is a possible alternative for phone
+submission, status and cancellation, using the existing bounded controller.
+
+No remote endpoint, tunnel, OAuth setup or phone connection is installed by this
+local milestone. Reuse controller scopes and define remote identity, revocation,
+availability and audit behavior before enabling one. Proxmox is not a prerequisite
 for the working desktop connection.
 
 Primary references: [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)

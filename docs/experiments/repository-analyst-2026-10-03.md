@@ -86,3 +86,5 @@ The smallest change would be to add `context_length` and `max_output_tokens` to 
 **Unchanged Defaults vs. Resource Use:**
 - Defaults ensure minimal resource use.
 - Overrides increase resource use (e.g., higher `num_ctx` uses more memory).
+
+A subsequent [controlled 8B vs 14B comparison](repository-analyst-8b-vs-14b.md) found cleaner citations from 14B but no clear overall improvement in assignment completeness.

@@ -16,10 +16,11 @@ Each open task has exactly one work-state label:
 - `work:review`: a proposal or PR awaits Forge review and verification.
 - `work:blocked`: record the specific prerequisite and who can resolve it.
 
-Closed issues are Done. A GitHub Project board can present Ready, In progress,
-Review and Done; blocked work belongs in a separate Blocked column. Keep board
-status and labels consistent when changing state. The initial board is pending
-GitHub Projects permission; issue labels remain usable independently.
+Closed issues are Done. The private [Forge work queue](https://github.com/users/kudama/projects/1)
+is linked to this repository and presents Ready, In progress, Review, Blocked and
+Done columns. Keep board status and labels consistent when changing state;
+issue labels remain usable independently. State synchronization is manual until
+an explicitly reviewed automation is installed.
 
 `worker:local` identifies bounded model proposals. `worker:forge` identifies
 architecture, security, integration, review and operational work. These labels

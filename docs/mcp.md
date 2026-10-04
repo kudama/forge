@@ -2,7 +2,7 @@
 
 The stdio bridge lets a desktop MCP client delegate bounded work to the existing
 authenticated controller. It starts on demand with the client and needs no
-Proxmox VM, new listening port or login service. Ollama and the controller must
+separate VM, new listening port or login service. Ollama and the controller must
 already be running. The bridge does not start them or access SQLite/source files
 directly. The controller remains authoritative for identity, role/tool grants,
 source scope, deadlines, ownership and model routing.
@@ -43,9 +43,9 @@ PY
 ```
 
 Use only an already reviewed `forge` source manifest. Restart the idle controller
-with the existing manual launcher to load grants. Existing tasks owned by `mike`
-are inaccessible to `forge_mcp`, and vice versa. Principal permissions are loaded
-at controller startup. Rotation/revocation requires changing both private records
+with the configured service manager or manual launcher to load grants. Tasks
+owned by other principals are inaccessible to `forge_mcp`, and vice versa.
+Principal permissions are loaded at controller startup. Rotation/revocation requires changing both private records
 as appropriate, restarting the controller and reconnecting the bridge. Never
 commit credentials or include bearer values in client settings, argv or logs.
 
@@ -99,7 +99,7 @@ that only consume text. Model completion is not a correctness verdict: senior
 Forge must review patch applicability, scope and behavior and run relevant tests.
 Bridge HTTP calls have a ten-second timeout and responses are capped at 128 KiB.
 
-## Verification and later phone access
+## Verification and remote access
 
 Verified on 2026-10-04: **116 tests pass**, including 17 bridge tests for MCP
 discovery/schema validation, private credentials, role denial/owner isolation,
@@ -110,7 +110,7 @@ cancellation and explicit model unloading. See
 The legacy initialize handshake was also verified with protocol `2025-11-25`,
 tool discovery and readiness, alongside the SDK's current default handshake.
 
-The user intends occasional initiation from ChatGPT on a phone. As checked on
+Remote clients require a separate supported connection. As checked on
 2026-10-04, [OpenAI documents custom MCP apps as web-only](https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt).
 A tunnel does not enable this workflow in the native ChatGPT mobile app. Verify
 the intended ChatGPT surface and account permissions before provisioning remote
@@ -129,7 +129,7 @@ submission, status and cancellation, using the existing bounded controller.
 
 No remote endpoint, tunnel, OAuth setup or phone connection is installed by this
 local milestone. Reuse controller scopes and define remote identity, revocation,
-availability and audit behavior before enabling one. Proxmox is not a prerequisite
+availability and audit behavior before enabling one. A separate VM is not a prerequisite
 for the working desktop connection.
 
 Primary references: [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)

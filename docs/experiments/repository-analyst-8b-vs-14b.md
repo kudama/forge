@@ -1,6 +1,6 @@
 # Repository analyst comparison: Qwen3 8B vs 14B
 
-Verified 2026-10-03 on the M5 Max Studio with 48 GB memory. Outcome: **no clear overall quality improvement on this assignment; do not promote 14B as the default on this evidence.**
+Verified 2026-10-03 on an Apple Silicon test host with 48 GB unified memory. Outcome: **no clear overall quality improvement on this assignment; do not promote 14B as the default on this evidence.**
 
 ## Controlled comparison
 

@@ -181,6 +181,10 @@ For a controller on another host, keep raw Ollama on loopback and use a restrict
 
 ## Backup, deletion, and recovery
 
-Stop the controller before copying its database; back up credentials separately through secure recovery storage. Restore to a separate private directory and start one controller against that copy to validate status/results. Use consistent SQLite backups if adding live backups. Preserve runtime/model manifests and dependency versions; exclude reproducible model caches from routine source backups.
+Use the [private backup and recovery workflow](backup-recovery.md) for consistent
+live SQLite snapshots and private configuration. Stop the managed services before
+any manual raw database copy. Validate restores in a separate private directory
+and instance before production replacement. Preserve runtime/model manifests and
+dependency versions; exclude reproducible model caches from routine source backups.
 
 There is no automatic retention scheduler in this release. Delete terminal task records through the owner-scoped endpoint and establish retention before ingesting personal data. Deletion is logical; it does not erase existing backup copies or guarantee forensic removal. Full disk/database failure may prevent durable status writes; recover disk/storage first, then restart and reconcile. Do not claim acceptance until backup/restore and failure scenarios are validated in the target deployment.

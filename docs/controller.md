@@ -28,7 +28,7 @@ path.chmod(0o600)
 PY
 ```
 
-Each principal needs a unique random bearer token of at least 32 characters, `agents: ["forge"]`, and `services: ["prototype"]` or `[]`. Token records require exactly those three fields. The file must have owner-only permissions. Never paste tokens into Git, commands, URLs, logs, or PRs. Rotate/revoke by editing the private file and restarting the controller; in-flight tasks should be stopped during revocation.
+Each principal needs a unique random bearer token of at least 32 characters, an `agents` list containing `forge` and/or `repository_analyst`, and `services: ["prototype"]` or `[]`. An optional `repositories` list grants explicit repository IDs. Unknown fields are rejected. The file must have owner-only permissions. Never paste tokens into Git, commands, URLs, logs, or PRs. Rotate/revoke by editing the private file and restarting the controller; in-flight tasks should be stopped during revocation.
 
 ## Start locally
 
@@ -58,11 +58,31 @@ export FORGE_PRINCIPALS_FILE="$PWD/.secrets/principals.json"
 
 The convenience client reads the development principal file and prints a task ID and result. It is not a credential-distribution mechanism: remote clients should receive only their own token. Ctrl+C in the client requests task cancellation. A client wait timeout leaves the task addressable by its ID.
 
+## Read-only repository analyst
+
+Set `FORGE_REPOSITORIES_FILE` to an operator-owned JSON manifest outside Git:
+
+```json
+{
+  "forge": {
+    "root": "/absolute/canonical/path/to/forge",
+    "files": ["src/forge_controller/model.py", "src/forge_controller/config.py", "pyproject.toml"]
+  }
+}
+```
+
+Grant the intended principal `agents: ["forge", "repository_analyst"]` and `repositories: ["forge"]` in its private credential record. Submit an analyst task with `agent: "repository_analyst"` and `tools: ["list_repository_files", "read_repository_file"]`. The convenience CLI currently submits only the original `forge` tasks; use the HTTP API for analyst tasks. Configure an adequate tool budget (`FORGE_TOOL_ROUNDS=8` was used for the first experiment).
+
+The analyst can list only manifest entries and read up to 80 numbered lines per call (at most 12 KiB returned). Approved files must be non-hidden `.py`, `.md`, or `.toml` sources. File reads are limited to 64 KiB, reject symlinks at every component, and reject non-regular/multiply-linked files and invalid UTF-8. Neither listing nor reading uses a command-execution tool. Selecting a source for the manifest is an operator responsibility: even source files may contain secrets and must be reviewed before granting access. Keep the manifest restricted to selected source files, not an entire home directory.
+
+Every read rechecks principal repository permission, requested task capability, path membership, argument shape, and limits. Approved file/range metadata is audited without source content. A task cannot finish as an analyst without at least one successful source read (`sources_not_read`); this does not prove its conclusions are correct. Source content remains untrusted. Reports require senior review; see the [first experiment](experiments/repository-analyst-2026-10-03.md).
+
 ## Configuration
 
 | Setting | Default / requirement |
 | --- | --- |
 | `FORGE_PRINCIPALS_FILE` | Required path to private principal grants |
+| `FORGE_REPOSITORIES_FILE` | Optional private path to explicit source manifest |
 | `FORGE_DATABASE` | `state/tasks.sqlite3`; local disk owned by service account |
 | `FORGE_MODEL_URL` | `http://127.0.0.1:11434`; trusted operator configuration |
 | `FORGE_MODEL` | `qwen3:8b` |

@@ -4,7 +4,7 @@ Forge builds and maintains shared software for the personal AI platform. Domain 
 
 ## Controller prototype
 
-A small Python execution service coordinates local inference and explicitly permitted tools. It supports authenticated task submission, owner-scoped results, cancellation, deadlines, and persistent task records. The only tool currently implemented is a **synthetic read-only service-status tool**.
+A small Python execution service coordinates local inference and explicitly permitted tools. It supports authenticated task submission, owner-scoped results, cancellation, deadlines, and persistent task records. Implemented tools provide synthetic read-only service status and explicitly granted source-file listing/reading for a local repository analyst. See the [first analyst experiment](docs/experiments/repository-analyst-2026-10-03.md).
 
 [Setup and operation](docs/controller.md) · [Architecture decision](docs/controller-architecture.md) · [Validation](docs/controller-validation.md)
 

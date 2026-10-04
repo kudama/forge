@@ -1,8 +1,15 @@
-# Forge
+# AI Forge
 
-Forge is a prototype execution controller for local language models. It gives
-AI clients a bounded way to delegate repository analysis and implementation
-proposals, while keeping tool permissions and review explicit.
+AI Forge is an engineering workspace and execution platform for Forge, a master
+agent that coordinates specialist subagents on behalf of its operator. Forge
+owns planning, architecture, delegation, and final review; subagents carry out
+explicitly scoped tasks.
+
+This repository currently implements a prototype controller for local language
+models, giving Forge a bounded way to delegate repository analysis and
+implementation proposals. Tool permissions and review remain explicit. The
+controller is one component of the agent system; it does not independently
+provide the master agent's reasoning or a complete autonomous subagent framework.
 
 ## What it does
 
@@ -45,7 +52,7 @@ controller listeners directly to the public internet.
 
 ## License and support
 
-Forge is available under the [MIT License](LICENSE), including for commercial
+AI Forge is available under the [MIT License](LICENSE), including for commercial
 use. This prototype is provided as-is, with no guaranteed support, maintenance
 schedule, response time, or service availability. Third-party dependencies and
 model weights retain their own licenses.

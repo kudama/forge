@@ -153,9 +153,10 @@ execution. If acceptance may have occurred but no task ID was saved, an operator
 must reconcile the controller's private audit/state before authorizing replacement
 work. Do not delete the journal or issue a new ID merely to bypass uncertainty.
 There is no automatic reconciliation or retry command. Loss of the journal also
-loses duplicate protection. Keep this journal with private backups: the existing
-`scripts/backup.py` bundle does not yet include it, so copy the journal separately
-while no handoff process is running. Records may contain sensitive prompts/results.
+loses duplicate protection. Keep this journal with private backups: version-2 `scripts/backup.py` bundles
+include the default journal under its submission lock. Supply `--journal` for a
+custom location; see [backup and recovery](backup-recovery.md). Older snapshots
+lack this protection. Records may contain sensitive prompts/results.
 
 Source pinning still requires the current checkout to match the order. Tracking
 status works after checkout changes; result validation rejects stale source.

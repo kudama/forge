@@ -67,3 +67,83 @@ def test_creation_rejects_symlinked_public_inputs(prototype, tmp_path, relative)
     with pytest.raises(ValueError, match='regular backup input'):
         backup.create(tmp_path/'snapshot')
     assert not (tmp_path/'snapshot').exists()
+
+
+def journal_record(order_id, status):
+    value={'version':1,'order':{'work_order_id':order_id},'owner':'operator',
+           'controller':'http://127.0.0.1:8787','submission':status}
+    if status=='accepted':value['task_id']='c'*32
+    return value
+
+
+def test_journal_snapshot_restore_prevents_replay(prototype,tmp_path):
+    pytest.importorskip('jsonschema')
+    from scripts.handoff import Journal, submit
+    from scripts.work_orders import HandoffError
+    import httpx
+    store=Store(prototype/'state/tasks.sqlite3');store.close()
+    source=Journal(prototype/'state/handoffs')
+    for order_id,status in [('a'*32,'accepted'),('b'*32,'submission_unknown'),('d'*32,'submitting')]:
+        source.write(journal_record(order_id,status))
+    snapshot=tmp_path/'snapshot'
+    assert backup.create(snapshot)['handoff_count']==3
+    archive=json.loads((snapshot/'handoffs.json').read_text())
+    restored=Journal(tmp_path/'recovered')
+    for record in archive['records'].values():restored.write(record)
+    with httpx.Client(transport=httpx.MockTransport(lambda request:pytest.fail('must not replay'))) as client:
+        for order_id in archive['records']:
+            record=restored.read(order_id)
+            if record['submission']=='accepted':
+                assert submit(record['order'],None,'operator',restored,client,record['controller'])['task_id']=='c'*32
+            else:
+                with pytest.raises(HandoffError):submit(record['order'],None,'operator',restored,client,record['controller'])
+    assert restored.read('d'*32)['submission']=='submission_unknown'
+
+
+def test_busy_journal_refuses_snapshot(prototype,tmp_path):
+    import fcntl
+    store=Store(prototype/'state/tasks.sqlite3');store.close()
+    root=prototype/'state/handoffs';root.mkdir(mode=0o700)
+    with (root/'.lock').open('w') as lock:
+        (root/'.lock').chmod(0o600)
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        with pytest.raises(ValueError,match='active'):backup.create(tmp_path/'snapshot')
+    assert not (tmp_path/'snapshot').exists()
+
+
+@pytest.mark.parametrize('mutation',['symlink','permission','hardlink','unexpected','oversized'])
+def test_unsafe_journal_rejected(prototype,tmp_path,mutation):
+    store=Store(prototype/'state/tasks.sqlite3');store.close()
+    root=prototype/'state/handoffs';root.mkdir(mode=0o700)
+    path=root/('a'*32+'.json');path.write_text(json.dumps(journal_record('a'*32,'accepted')));path.chmod(0o600)
+    if mutation=='symlink':
+        outside=tmp_path/'outside';path.rename(outside);path.symlink_to(outside)
+    elif mutation=='hardlink':
+        import os
+        os.link(path,tmp_path/'outside')
+    elif mutation=='permission':path.chmod(0o644)
+    elif mutation=='oversized':path.write_bytes(b'x'*262145)
+    else:(root/'unknown').write_text('unexpected')
+    with pytest.raises(ValueError):backup.create(tmp_path/'snapshot')
+    assert not (tmp_path/'snapshot').exists()
+
+
+def test_legacy_snapshot_remains_verifiable(prototype,tmp_path):
+    store=Store(prototype/'state/tasks.sqlite3');store.close()
+    target=tmp_path/'snapshot';backup.create(target)
+    path=target/'manifest.json';manifest=json.loads(path.read_text())
+    manifest['version']=1;manifest.pop('handoff_count');manifest['sha256'].pop('handoffs.json')
+    (target/'handoffs.json').unlink();path.write_text(json.dumps(manifest))
+    assert backup.verify(target)['handoff_count'] is None
+
+
+def test_journal_checksum_and_count_verification(prototype,tmp_path):
+    store=Store(prototype/'state/tasks.sqlite3');store.close()
+    target=tmp_path/'snapshot';backup.create(target)
+    path=target/'handoffs.json';path.write_text('{}')
+    with pytest.raises(ValueError,match='checksum'):backup.verify(target)
+    path.write_text(json.dumps({'version':1,'records':{}}))
+    manifest_path=target/'manifest.json';manifest=json.loads(manifest_path.read_text())
+    manifest['sha256']['handoffs.json']=backup.digest(path);manifest['handoff_count']=1
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='count'):backup.verify(target)

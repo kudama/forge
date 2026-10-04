@@ -1,0 +1,11 @@
+{
+  "backup_integrity_verified": true,
+  "restored_task_records_compared": 29,
+  "restored_readiness": true,
+  "unauthenticated_request_rejected": true,
+  "cross_owner_request_rejected": true,
+  "original_snapshot_unchanged": true,
+  "live_database_replaced": false,
+  "restore_instance": "isolated ASGI application with temporary database; real Ollama readiness; no inference task submitted",
+  "off_host_copy_verified": false
+}

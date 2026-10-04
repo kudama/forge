@@ -232,7 +232,7 @@ def test_consistent_backup_restore_and_future_schema(tmp_path):
         store.db.backup(backup)
     restored = Store(target)
     assert restored.get(task_id)['result'] == 'backup result'
-    restored.db.execute('PRAGMA user_version=2')
+    restored.db.execute('PRAGMA user_version=3')
     restored.close()
     with pytest.raises(RuntimeError, match='Unsupported database schema'):
         Store(target)

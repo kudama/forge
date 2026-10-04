@@ -80,6 +80,7 @@ open chat has refreshed its tool catalog. To remove registration, use
 | --- | --- |
 | `forge_health` | Authenticated readiness; no model load |
 | `forge_submit_task` | Prompt, existing agent ID, declared read/status tools; returns ID immediately |
+| `forge_submit_work_order` | Validated order; controller captures selected source and enforces result scope; returns ID |
 | `forge_get_task` | Owner-scoped status, untrusted result and audit |
 | `forge_cancel_task` | Explicit queued/running cancellation; terminal records remain terminal |
 

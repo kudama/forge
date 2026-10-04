@@ -32,7 +32,7 @@ def check_database(path):
     with sqlite3.connect(path.resolve().as_uri()+'?mode=ro', uri=True) as db:
         if db.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
             raise ValueError('Database integrity check failed')
-        if db.execute('PRAGMA user_version').fetchone()[0] != 1:
+        if db.execute('PRAGMA user_version').fetchone()[0] not in {1,2}:
             raise ValueError('Unsupported database version')
         return db.execute('SELECT count(*) FROM tasks').fetchone()[0]
 

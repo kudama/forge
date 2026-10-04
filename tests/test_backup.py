@@ -147,3 +147,22 @@ def test_journal_checksum_and_count_verification(prototype,tmp_path):
     manifest['sha256']['handoffs.json']=backup.digest(path);manifest['handoff_count']=1
     manifest_path.write_text(json.dumps(manifest))
     with pytest.raises(ValueError,match='count'):backup.verify(target)
+
+
+def test_bundle_preserves_controller_native_snapshots(prototype,tmp_path):
+    store=Store(prototype/'state/tasks.sqlite3')
+    order={'work_order_id':'a'*32,'source':{'repository_id':'forge','revision':'b'*40,'files':[]}}
+    task=store.create('operator','repository_analyst',(order,{'source.py':'captured\n'}))
+    store.update(task,'succeeded',result='preserved')
+    target=tmp_path/'snapshot'
+    try:assert backup.create(target)['task_count']==1
+    finally:store.close()
+    import shutil
+    recovered=tmp_path/'recovered.sqlite3'
+    shutil.copyfile(target/'tasks.sqlite3',recovered)
+    restored=Store(recovered)
+    try:
+        assert restored.get(task)['work_order_id']==order['work_order_id']
+        assert restored.has_order('operator',order['work_order_id'])
+        assert json.loads(restored.db.execute('SELECT sources_json FROM work_orders').fetchone()[0])=={'source.py':'captured\n'}
+    finally:restored.close()

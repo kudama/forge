@@ -106,11 +106,12 @@ def summary(record):
             'review_required':True}
 
 
-def submit(order, settings, owner, journal, client, endpoint):
+def submit(order, settings, owner, journal, client, endpoint, native=False):
     with journal.locked():
         existing = journal.read(order['work_order_id'])
         if existing:
-            if (existing['order']!=order or existing['owner']!=owner or existing['controller']!=endpoint):
+            if (existing['order']!=order or existing['owner']!=owner or existing['controller']!=endpoint
+                or existing.get('native',False)!=native):
                 raise HandoffError('order_identity_conflict')
             if existing['submission'] == 'submitting':
                 existing['submission']='submission_unknown'; journal.write(existing)
@@ -118,10 +119,10 @@ def submit(order, settings, owner, journal, client, endpoint):
                 raise HandoffError('submission_not_retryable')
             return summary(existing)
         task = compile_task(order, settings, owner)
-        record = {'version':1, 'order':order, 'owner':owner, 'controller':endpoint, 'submission':'submitting'}
+        record = {'version':1, 'order':order, 'owner':owner, 'controller':endpoint, 'submission':'submitting', 'native':native}
         journal.write(record)  # Must be durable BEFORE POST; an interrupted receipt is never replayed.
         try:
-            code, receipt = request(client, 'POST', '/v1/tasks', task)
+            code, receipt = request(client, 'POST', '/v1/work-orders' if native else '/v1/tasks', order if native else task)
             if (code != 202 or not isinstance(receipt, dict) or receipt.get('status')!='queued'
                 or not isinstance(receipt.get('id'), str) or not ID.fullmatch(receipt['id'])):
                 raise HandoffError('invalid_submission_receipt')
@@ -152,7 +153,14 @@ def resume(order_id, settings, owner, journal, client, endpoint, validate=False)
         record['execution']=execution
         journal.write(record)
         output = summary(record)
-        if validate:
+        if validate and record.get('native',False):
+            verdict = execution.get('validation')
+            if (execution.get('work_order_id')!=order_id or execution['status']!='succeeded'
+                or verdict != {'structure_valid':True,'source_valid':True,'review_required':True}
+                or execution.get('snapshot')!=record['order']['source']):
+                raise HandoffError('native_validation_failed')
+            output['validation']=verdict
+        elif validate:
             try:
                 result=json.loads(execution['result'])
             except (KeyError, TypeError, ValueError):
@@ -167,7 +175,10 @@ def main():
     parser.add_argument('order', help='Order JSON path for submit; work-order ID otherwise')
     parser.add_argument('--principal', required=True)
     parser.add_argument('--journal', type=Path, default=Path('state/handoffs'))
+    parser.add_argument('--native',action='store_true',help='Submit through the controller-enforced work-order API')
     args=parser.parse_args()
+    if args.native and args.action!='submit':
+        parser.error('--native is only valid with submit')
     try:
         settings=Settings.from_environment()
         endpoint=controller_url(os.environ.get('FORGE_CONTROLLER_URL', 'http://127.0.0.1:8787'))
@@ -176,7 +187,7 @@ def main():
         with httpx.Client(base_url=endpoint, headers={'Authorization':'Bearer '+token},
                           timeout=10, trust_env=False, follow_redirects=False) as client:
             if args.action=='submit':
-                output=submit(load_json(args.order), settings, args.principal, journal, client, endpoint)
+                output=submit(load_json(args.order), settings, args.principal, journal, client, endpoint, args.native)
             else:
                 output=resume(args.order, settings, args.principal, journal, client, endpoint, args.action=='validate')
         print(json.dumps(output))

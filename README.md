@@ -37,7 +37,7 @@ For startup and recovery on macOS, see [service management](docs/mac-services.md
 
 ## Architecture and validation
 
-The [work-order design](docs/work-orders.md) defines explicit assignment and
+The [work-order contracts and native enforcement](docs/work-orders.md) define explicit assignment and
 result contracts, tested through the current controller compatibility path.
 
 The controller and inference runtime are separate components and can run on

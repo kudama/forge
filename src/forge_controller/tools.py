@@ -90,3 +90,28 @@ def execute(settings, owner, agent, name, args):
             os.close(fd)
         if directory is not None:
             os.close(directory)
+
+
+def execute_snapshot(settings, owner, agent, name, args, order, sources):
+    """Read only captured strings; never reopen the working checkout."""
+    if not permitted(settings, owner, agent, name) or name not in order['tools'] or not isinstance(args, dict):
+        raise ToolDenied()
+    required = {'repository'} if name == 'list_repository_files' else {'repository', 'path', 'start_line', 'end_line'}
+    repo_id = order['source']['repository_id']
+    if set(args) != required or args.get('repository') != repo_id:
+        raise ToolDenied()
+    if name == 'list_repository_files':
+        return {'repository':repo_id, 'files':list(sources), 'scope':'immutable work-order snapshot'}
+    path, start, end = args['path'], args['start_line'], args['end_line']
+    if (not isinstance(path, str) or path not in sources or type(start) is not int or type(end) is not int
+        or start < 1 or end < start or end-start >= 80):
+        raise ToolDenied()
+    lines = sources[path].splitlines()
+    if start > len(lines):
+        raise ToolDenied()
+    text = '\n'.join(f'{n}: {line}' for n,line in enumerate(lines[start-1:end],start))
+    if len(text.encode()) > 12000:
+        raise ToolDenied()
+    return {'repository':repo_id,'path':path,'total_lines':len(lines),'start_line':start,
+            'end_line':min(end,len(lines)),'content':text,
+            'source_sha256':hashlib.sha256(sources[path].encode()).hexdigest()}

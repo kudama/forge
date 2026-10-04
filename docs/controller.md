@@ -160,6 +160,7 @@ All routes except liveness require `Authorization: Bearer <token>`. There is no 
 | `GET /health/live` | Process liveness |
 | `GET /health/ready` | Database write probe and configured model availability; no inference load |
 | `POST /v1/tasks` | Accept `{ "agent": "forge", "prompt": "...", "tools": ["get_service_status"] }`; tools default to none; return 202 and ID |
+| `POST /v1/work-orders` | Submit a source-pinned order; immutable selected-file snapshot and structured result enforcement; see [work orders](work-orders.md) |
 | `GET /v1/tasks/{id}` | Owner-scoped task status, result, error, and tool audit |
 | `POST /v1/tasks/{id}/cancel` | Cancel queued/running task; completed records remain terminal |
 | `DELETE /v1/tasks/{id}` | Delete settled terminal record; 409 while active |
@@ -188,3 +189,7 @@ and instance before production replacement. Preserve runtime/model manifests and
 dependency versions; exclude reproducible model caches from routine source backups.
 
 There is no automatic retention scheduler in this release. Delete terminal task records through the owner-scoped endpoint and establish retention before ingesting personal data. Deletion is logical; it does not erase existing backup copies or guarantee forensic removal. Full disk/database failure may prevent durable status writes; recover disk/storage first, then restart and reconcile. Do not claim acceptance until backup/restore and failure scenarios are validated in the target deployment.
+
+Native work orders migrate the database to version 2. Back up before upgrade; an
+older controller requires a pre-upgrade restore. Generic tasks remain compatible.
+See [native scope, retention and rollback](work-orders.md#controller-enforced-work-orders).

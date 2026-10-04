@@ -56,12 +56,10 @@ The worker's work-order ID must match the issued order.
    checks, link the PR and put the issue in Review. Close after merge and fulfilled
    acceptance criteria, not merely after controller execution succeeds.
 
-Current controller enforcement covers principal, role, tools, runtime manifest,
-limits and lifecycle. It does not accept or enforce the work-order commit, hashes,
-selected subset, issue link or result schema. These are Forge-side preflight and
-review gates in this trial. Before/after hash comparison detects persistent
-changes but cannot exclude transient source changes during execution. Future
-controller implementation should read from an immutable, scoped source snapshot.
+The original compatibility trials below use the generic task endpoint: commit,
+hashes, selected subset and result contract are Forge-side gates in that path.
+Before/after hashes cannot exclude transient checkout changes. The native endpoint
+now enforces these boundaries using captured source; see the native section below.
 
 Worker schema validity and proposal correctness are separate verdicts. Record
 execution status, result-schema status and Forge review status independently.
@@ -115,8 +113,8 @@ suite passes 188 tests, including 34 handoff regression cases.
 
 The Forge-side validator/compiler has no GitHub polling or scheduler. Orders and execution links stay in private state. The explicit journal below
 persists submissions and supports polling after a process restart. Preserve existing submission and ownership
-behavior. Controller-native work orders and idempotent submission
-need separate designs and migrations rather than prompt-only claims of enforcement.
+behavior. The native endpoint below adds scoped source enforcement. Controller receipt
+reconciliation after a lost response remains a separate boundary.
 
 The compatibility trial uses [issue #15](https://github.com/kudama/forge/issues/15)
 and [review evidence](experiments/work-order-contract-2026-10-04.json).
@@ -160,10 +158,77 @@ lack this protection. Records may contain sensitive prompts/results.
 
 Source pinning still requires the current checkout to match the order. Tracking
 status works after checkout changes; result validation rejects stale source.
-Native controller snapshots, idempotent submission and automated scheduling remain
-separate implementation boundaries.
+Native mode uses the captured source rather than the checkout for validation.
+Receipt reconciliation and automated scheduling remain separate boundaries.
 
 The [live durable-handoff trial](experiments/durable-handoff-2026-10-04.json)
 used Qwen3:8b, resumed polling through separate CLI processes, returned the saved
 receipt on duplicate submission, and produced independently verified source-line
 evidence. The optional-tooling suite passes 209 tests, including 21 journal cases.
+
+## Controller-enforced work orders
+
+Submit an order directly to `POST /v1/work-orders`, through MCP's
+`forge_submit_work_order(order)`, or with durable receipt tracking:
+
+```sh
+.venv/bin/python scripts/handoff.py submit /private/path/order.json --principal forge_mcp --native
+.venv/bin/python scripts/handoff.py status WORK_ORDER_ID --principal forge_mcp
+.venv/bin/python scripts/handoff.py validate WORK_ORDER_ID --principal forge_mcp
+```
+
+The existing generic task endpoint remains compatible and continues to use live
+manifest files. Native issuance requires the principal's `forge` role as well as the selected
+worker role; worker-only credentials cannot issue orders. Admission validates
+the published contracts and principal/role/tool grants, exact configured runtime limits, current HEAD revision,
+approved paths and both Git/current-file hashes. Source capture is serialized,
+using fixed controller-owned Git reads, never a worker command capability. Each
+file is bounded to 64 KiB, at most 20 files per order; normal admission capacity
+still applies. The existing 32 KiB request and 8,000-character compiled prompt
+limits remain in force. Oversized or invalid orders fail rather than truncate.
+
+Native workers list only selected files and read only captured UTF-8 source from
+the pinned commit. Subsequent checkout changes cannot alter their reads. Reviewed
+examples are omitted from native tasks to avoid unrelated source context. Existing
+80-line/12 KiB read bounds, tool budget, model routing, deadline, ownership and
+cancellation apply. Captured strings are immutable to workers; the trusted
+operator/controller owns the database and can still modify it.
+
+Before success, the controller validates JSON result shape, order ID, role, source
+reads, audit tool/range scope, citations and exact non-overlapping replacements
+against the snapshot. Invalid results fail with `invalid_worker_result`; denied
+scope fails with `tool_denied`. A successful task includes `work_order_id`, snapshot
+revision/file hashes and `validation` with `review_required: true`. Correctness,
+acceptance criteria and proposed behavior still require independent Forge review.
+The native journal trusts this authenticated verdict instead of reopening a
+possibly changed checkout. Generic journal validation retains its original checks.
+
+The database migrates version 1 to version 2 on startup, preserving tasks and
+adding controller-owned order/source bindings in the same transaction as task
+creation. Startup marks interrupted work failed and never replays snapshots.
+SQLite backups capture bindings together with tasks; verification supports both
+database versions. Snapshot text and objectives are private application state,
+not public audit output. Deleting a settled task removes its source/order content
+with SQLite secure deletion enabled (older backups still retain their copies),
+but retains an owner/order-ID/task-ID tombstone so that ID cannot be reused.
+IDs are unique per principal; duplicates return 409 and are never re-executed.
+This rejects duplicates; it does not recover a lost receipt or provide an
+exactly-once execution guarantee. Keep the journal and do not bypass uncertain
+submissions with replacement IDs without reconciliation.
+
+Back up before upgrading. An older controller cannot open database version 2;
+rollback requires stopping the controller and restoring a verified pre-upgrade
+version-1 database with its matching journal/configuration. Reconcile newer work
+first. Do not merely downgrade code against the migrated database. No production
+state is replaced automatically. JSON Schema and its already-locked MCP
+transitive dependencies now belong to the core runtime because admission and
+completion must enforce contracts; install the updated core lock when deploying.
+Contract schemas are packaged in the controller distribution, with tests checking
+agreement with their published documentation copies.
+
+The [native MCP trial](experiments/native-work-order-2026-10-04.json) used an
+isolated controller with real Qwen3:8b inference and passed native result gates;
+Forge independently checked its source-line claims. All 241 tests pass, including
+checkout mutation, subset denial, malformed results, owner isolation, interruption,
+backup binding preservation and migration. An installed wheel validated its
+packaged contracts outside the repository.

@@ -13,7 +13,7 @@
     {
       "task": {
         "id": "c1e87aa61ba94fdea604914d7dc7e151",
-        "owner": "mike",
+        "owner": "operator",
         "agent": "repository_analyst",
         "status": "succeeded",
         "created": 1791129049.5494452,
@@ -67,7 +67,7 @@
     {
       "task": {
         "id": "06aa9d089aa342d796837cf38671a181",
-        "owner": "mike",
+        "owner": "operator",
         "agent": "implementer",
         "status": "succeeded",
         "created": 1791129056.125046,
@@ -129,7 +129,7 @@
   ],
   "cancelled_task": {
     "id": "08a4c85139894d949a94ade6a1b4c938",
-    "owner": "mike",
+    "owner": "operator",
     "agent": "forge",
     "status": "cancelled",
     "created": 1791129049.551507,

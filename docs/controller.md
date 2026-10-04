@@ -22,7 +22,7 @@ folder.mkdir(mode=0o700, exist_ok=True)
 path = folder / 'principals.json'
 if path.exists():
     raise SystemExit('Credential file already exists; preserving it.')
-path.write_text(json.dumps({'mike': {'token': secrets.token_urlsafe(32),
+path.write_text(json.dumps({'operator': {'token': secrets.token_urlsafe(32),
                                    'agents': ['forge'], 'services': ['prototype']}}, indent=2))
 path.chmod(0o600)
 PY
@@ -75,6 +75,7 @@ In another terminal from this checkout:
 
 ```sh
 export FORGE_PRINCIPALS_FILE="$PWD/.secrets/principals.json"
+export FORGE_CLIENT_PRINCIPAL=operator
 .venv/bin/python -m forge_controller.client --status-tool \
   'Check the prototype service with the status tool and identify whether the result is synthetic.'
 ```
@@ -146,7 +147,7 @@ with context 4096 in the prototype comparison.
 | `FORGE_CAPACITY` | 8 admitted tasks, including running work |
 | `FORGE_TOOL_ROUNDS` | Maximum 3 total tool calls |
 | `FORGE_CONTROLLER_URL` | Client URL, default `http://127.0.0.1:8787` |
-| `FORGE_CLIENT_PRINCIPAL` | Development client principal, default `mike` |
+| `FORGE_CLIENT_PRINCIPAL` | Configured principal name; set explicitly (for example, `operator`) |
 
 Model calls default to 4096-token context and at most 512 output tokens; both limits can be overridden at startup. Thinking is disabled, temperature is 0, and models unload after five idle minutes. Model responses are limited to 64 KiB; HTTP request bodies to 32 KiB; prompts to 8000 characters. One task runs at a time. There is no automatic external-model fallback. New limits must be actual positive integers; booleans/fractional/string programmatic values and malformed environment values are rejected. Operator overrides can increase memory use, output length, latency, and deadline risk; practical upper bounds need workload measurements.
 
@@ -176,7 +177,7 @@ outside the checkout, set absolute database/config paths, and use a single
 `systemd` service process with explicit working directory/environment and restart
 throttling. Ubuntu service installation and VM deployment remain later steps.
 
-For a controller on another host, keep raw Ollama on loopback and use a restricted SSH tunnel or an authenticated TLS gateway. Update `FORGE_MODEL_URL` accordingly. Do not expose raw Ollama, publish controller ports to the Internet, or use unencrypted bearer tokens across an untrusted network. Reuse existing private networking. The current firewall was observed disabled; network deployment requires verifying firewall and access restrictions first.
+For a controller on another host, keep raw Ollama on loopback and use a restricted SSH tunnel or an authenticated TLS gateway. Update `FORGE_MODEL_URL` accordingly. Do not expose raw Ollama, publish controller ports to the Internet, or use unencrypted bearer tokens across an untrusted network. Reuse existing private networking. Verify the deployment host firewall and access restrictions before enabling network access.
 
 ## Backup, deletion, and recovery
 

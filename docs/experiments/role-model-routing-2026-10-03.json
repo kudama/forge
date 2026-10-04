@@ -247,7 +247,7 @@
         "elapsed_seconds": 6.84,
         "task": {
           "id": "f986efba7ab5473baad75d5ad1539cea",
-          "owner": "mike",
+          "owner": "operator",
           "agent": "repository_analyst",
           "status": "failed",
           "created": 1791083880.7871418,
@@ -356,7 +356,7 @@
         "elapsed_seconds": 6.72,
         "task": {
           "id": "97696025aa18430cb0b3e1460d6c88e6",
-          "owner": "mike",
+          "owner": "operator",
           "agent": "implementer",
           "status": "succeeded",
           "created": 1791083887.629367,
@@ -417,7 +417,7 @@
         "elapsed_seconds": 6.23,
         "task": {
           "id": "1e5fd846f26e458e88d07cc046532493",
-          "owner": "mike",
+          "owner": "operator",
           "agent": "repository_analyst",
           "status": "failed",
           "created": 1791083894.347959,
@@ -528,7 +528,7 @@
   "analyst_followup": {
     "task": {
       "id": "bb83d10ee38c46d48b3f7b8e2d8e817b",
-      "owner": "mike",
+      "owner": "operator",
       "agent": "repository_analyst",
       "status": "succeeded",
       "created": 1791083942.190445,

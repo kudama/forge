@@ -12,6 +12,12 @@ One controller process owns one database, enforced with a Unix file lock. Do not
 
 The adapter talks to the configured Ollama URL; no Mac-specific inference assumption exists in orchestration code. Moving the controller to an Ubuntu VM changes configuration and the launcher. Network separation requires authenticated encrypted connectivity, restricted network access, and tested availability/error behavior. Model inference remains on the GPU host; the controller VM needs no GPU. Host sleep/power policy is an operational choice.
 
-Agent identifiers are `forge`, the read-only `repository_analyst`, and the patch-proposing `implementer`. The implementer can read approved sources and return a candidate patch, with no file-write or command capability; senior Forge reviews/applies it and verifies behavior. The analyst has a separate prompt, explicit repository grants, and source-reading capabilities; all roles share the configured local model. Enabling further agents requires intentional capability definitions and tests. Keep domain-specific connectors and knowledge with their domain repositories. API/MCP adapters should implement this permission boundary when added; this release contains no MCP transport/server.
+Agent identifiers are `forge`, the read-only `repository_analyst`, and the patch-proposing `implementer`. The implementer can read approved sources and return a candidate patch, with no file-write or command capability; senior Forge reviews/applies it and verifies behavior. The analyst has a separate prompt, explicit repository grants, and source-reading capabilities; roles use the operator-configured model mapping with a shared fallback. Enabling further agents requires intentional capability definitions and tests. Keep domain-specific connectors and knowledge with their domain repositories. API/MCP adapters should implement this permission boundary when added; the optional local stdio facade now implements that boundary through the authenticated task API.
 
-ChatGPT remains the senior engineering interface. Connecting it to the controller requires a separate API/MCP integration and an explicit trust/permission design; running this service does not grant this chat access automatically.
+ChatGPT remains the senior engineering interface. The optional
+[local stdio MCP facade](mcp.md) now forwards bounded task lifecycle calls through
+a dedicated controller principal. It opens no network listener and accesses no
+database or source directly. The core controller remains independent of the MCP
+SDK. Role-specific models are operator-configured. Client registration and a
+successful protocol test do not automatically refresh an already open chat's
+tool catalog. Remote ChatGPT/phone access needs a later authenticated transport.

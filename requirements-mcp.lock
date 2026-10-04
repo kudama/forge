@@ -1,0 +1,18 @@
+# Optional MCP bridge and its tested dependencies.
+-r requirements.lock
+attrs==26.1.0
+cffi==2.1.1
+cryptography==50.0.2
+httpcore2==2.13.1
+httpx2==2.13.1
+jsonschema-specifications==2025.9.1
+jsonschema==4.26.0
+mcp-types==2.3.0
+mcp==2.3.0
+pycparser==3.0
+PyJWT==2.15.1
+python-multipart==0.0.32
+referencing==0.37.0
+rpds-py==2026.6.3
+sse-starlette==3.5.0
+truststore==0.10.4

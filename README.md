@@ -11,3 +11,5 @@ A small Python execution service coordinates local inference and explicitly perm
 The controller and model runtime can run on different hosts. Development currently uses the Mac Studio; deployment to Ubuntu is supported by the design but has not yet been tested there. This service is not connected to ChatGPT and does not implement the domain agents or real household connectors.
 
 Model context/output limits are configurable at startup. See the [reviewed implementation experiment](docs/experiments/implementer-model-limits.md) for local-model contributions, corrections, and verification.
+
+[Reviewed examples and evaluation loop](docs/feedback-loop.md) provides scoped reference retrieval and repeatable checks with required senior review. It does not automatically train or promote models.

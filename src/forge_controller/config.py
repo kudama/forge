@@ -18,6 +18,7 @@ class Settings:
     capacity: int = 8
     tool_rounds: int = 3
     repositories: dict[str, dict] = field(default_factory=dict)
+    examples_file: Path | None = None
 
     def __post_init__(self):
         if type(self.context_length) is not int or self.context_length <= 0:
@@ -81,5 +82,6 @@ class Settings:
             timeout=float(os.environ.get("FORGE_TASK_TIMEOUT", "60")),
             capacity=int(os.environ.get("FORGE_CAPACITY", "8")),
             tool_rounds=int(os.environ.get("FORGE_TOOL_ROUNDS", "3")),
+            examples_file=Path(os.environ["FORGE_EXAMPLES_FILE"]).expanduser() if os.environ.get("FORGE_EXAMPLES_FILE") else None,
             repositories=json.loads(Path(os.environ["FORGE_REPOSITORIES_FILE"]).read_text()) if os.environ.get("FORGE_REPOSITORIES_FILE") else {},
         )

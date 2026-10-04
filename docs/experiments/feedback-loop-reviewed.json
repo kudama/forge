@@ -1,0 +1,317 @@
+{
+  "checker_sha256": "750562c3f171616361f9a05ac08112f8d5143b1f354808628067fdfa28a36394",
+  "cases_sha256": "47b6fb01740a11a518749a57a12529509b0a43d648a8e436e8dfe82ad5d314ca",
+  "source_sha256": {
+    "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375",
+    "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd"
+  },
+  "model_manifest": {
+    "name": "qwen3:8b",
+    "model": "qwen3:8b",
+    "modified_at": "2026-10-03T16:50:15.652213487-07:00",
+    "size": 5225388164,
+    "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "8.2B",
+      "quantization_level": "Q4_K_M",
+      "context_length": 40960,
+      "embedding_length": 4096
+    },
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ]
+  },
+  "method": "sequential single runs; wall times include loading/caching; mechanical checks require senior review",
+  "runs": [
+    {
+      "reference_mode": "off",
+      "corpus_sha256": null,
+      "model": "qwen3:8b",
+      "context_length": 4096,
+      "max_output_tokens": 512,
+      "tool_call_limit": 8,
+      "cases": [
+        {
+          "case": "current-model-limit-defaults",
+          "agent": "repository_analyst",
+          "status": "succeeded",
+          "error": null,
+          "elapsed_seconds": 1.63,
+          "checks": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "named_defaults": true,
+            "source_citation_format": false,
+            "cited_defaults_match_source": false
+          },
+          "mechanical_pass": false,
+          "manual_review_required": true,
+          "result": "- `context_length`: 4096 (line 16)  \n- `max_output_tokens`: 512 (line 17)  \n- File: `src/forge_controller/config.py` (lines 16-17)",
+          "audit": [
+            {
+              "tool": "read_repository_file",
+              "status": "allowed",
+              "repository": "forge",
+              "path": "src/forge_controller/config.py",
+              "start_line": 8,
+              "end_line": 40
+            }
+          ],
+          "checks_at_generation": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "named_defaults": true,
+            "source_citation_format": false,
+            "cited_defaults_match_source": false
+          }
+        },
+        {
+          "case": "positive-integer-review",
+          "agent": "repository_analyst",
+          "status": "succeeded",
+          "error": null,
+          "elapsed_seconds": 2.37,
+          "checks": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "bool_pitfall_named": true,
+            "bool_acceptance_explained": true,
+            "exact_type_proposed": false,
+            "invalid_cases_named": true,
+            "no_known_false_float_claim": false
+          },
+          "mechanical_pass": false,
+          "manual_review_required": true,
+          "result": "The current code uses `type(...)` to check for integers and enforces positivity. Replacing with `isinstance(value, int) and value > 0` is safe for integers but **not** for `bool` values, as `isinstance(True, int)` returns `True` (since `bool` inherits from `int`). To exclude `bool`, use `isinstance(value, int) and not isinstance(value, bool) and value > 0`. This ensures only true integers (not booleans) are accepted. Zero, negatives, and floats are already excluded by `value > 0`.",
+          "audit": [
+            {
+              "tool": "read_repository_file",
+              "status": "allowed",
+              "repository": "forge",
+              "path": "src/forge_controller/config.py",
+              "start_line": 8,
+              "end_line": 40
+            }
+          ],
+          "checks_at_generation": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "bool_pitfall_named": true,
+            "exact_type_proposed": false,
+            "invalid_cases_named": true,
+            "no_known_false_float_claim": false
+          }
+        },
+        {
+          "case": "exact-temperature-patch",
+          "agent": "implementer",
+          "status": "succeeded",
+          "error": null,
+          "elapsed_seconds": 1.57,
+          "checks": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "exact_applicable_patch": false
+          },
+          "mechanical_pass": false,
+          "manual_review_required": true,
+          "result": "{\"path\": \"src/forge_controller/model.py\", \"edits\": [{\"before\": \"                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0),\", \"after\": \"                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0.1),\"}]}",
+          "audit": [
+            {
+              "tool": "read_repository_file",
+              "status": "allowed",
+              "repository": "forge",
+              "path": "src/forge_controller/model.py",
+              "start_line": 20,
+              "end_line": 30
+            }
+          ],
+          "checks_at_generation": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "exact_applicable_patch": false
+          }
+        }
+      ]
+    },
+    {
+      "reference_mode": "on",
+      "corpus_sha256": "b9b2359aaf8e92a5d6625f022930cb433bd2a254b8bad386b5ce226031276325",
+      "model": "qwen3:8b",
+      "context_length": 4096,
+      "max_output_tokens": 512,
+      "tool_call_limit": 8,
+      "cases": [
+        {
+          "case": "current-model-limit-defaults",
+          "agent": "repository_analyst",
+          "status": "succeeded",
+          "error": null,
+          "elapsed_seconds": 1.43,
+          "checks": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "named_defaults": true,
+            "source_citation_format": true,
+            "cited_defaults_match_source": true
+          },
+          "mechanical_pass": true,
+          "manual_review_required": true,
+          "result": "The current defaults are:\n- `context_length`: 4096 (src/forge_controller/config.py:16)\n- `max_output_tokens`: 512 (src/forge_controller/config.py:17)",
+          "audit": [
+            {
+              "tool": "reviewed_example",
+              "status": "retrieved",
+              "example_id": "analyst-defaults-and-tests"
+            },
+            {
+              "tool": "read_repository_file",
+              "status": "allowed",
+              "repository": "forge",
+              "path": "src/forge_controller/config.py",
+              "start_line": 8,
+              "end_line": 40
+            }
+          ],
+          "checks_at_generation": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "named_defaults": true,
+            "source_citation_format": true,
+            "cited_defaults_match_source": true
+          }
+        },
+        {
+          "case": "positive-integer-review",
+          "agent": "repository_analyst",
+          "status": "succeeded",
+          "error": null,
+          "elapsed_seconds": 2.27,
+          "checks": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "bool_pitfall_named": true,
+            "bool_acceptance_explained": false,
+            "exact_type_proposed": true,
+            "invalid_cases_named": true,
+            "no_known_false_float_claim": true
+          },
+          "mechanical_pass": false,
+          "manual_review_required": true,
+          "result": "The current code enforces strict integer checks using `type(...)` and ensures positivity. A proposed replacement with `isinstance(value, int)` and `value > 0` would still reject booleans (as they are not integers) and floats (since `isinstance(1.5, int)` is False). Zero and negatives are already blocked by `value > 0`. For strict type checks, use `type(value) is int` instead of `isinstance(value, int)` to avoid accepting subclasses. This ensures only exact integers are accepted.",
+          "audit": [
+            {
+              "tool": "reviewed_example",
+              "status": "retrieved",
+              "example_id": "analyst-positive-integer-review"
+            },
+            {
+              "tool": "read_repository_file",
+              "status": "allowed",
+              "repository": "forge",
+              "path": "src/forge_controller/config.py",
+              "start_line": 8,
+              "end_line": 40
+            }
+          ],
+          "checks_at_generation": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "bool_pitfall_named": true,
+            "exact_type_proposed": true,
+            "invalid_cases_named": true,
+            "no_known_false_float_claim": true
+          }
+        },
+        {
+          "case": "exact-temperature-patch",
+          "agent": "implementer",
+          "status": "succeeded",
+          "error": null,
+          "elapsed_seconds": 1.69,
+          "checks": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "exact_applicable_patch": false
+          },
+          "mechanical_pass": false,
+          "manual_review_required": true,
+          "result": "{\"path\": \"src/forge_controller/model.py\", \"edits\": [{\"before\": \"                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0),\", \"after\": \"                        options=dict(num_ctx=self.settings.context_length, num_predict=self.settings.max_output_tokens, temperature=0.1),\"}]}",
+          "audit": [
+            {
+              "tool": "reviewed_example",
+              "status": "retrieved",
+              "example_id": "implementer-exact-source-patch"
+            },
+            {
+              "tool": "read_repository_file",
+              "status": "allowed",
+              "repository": "forge",
+              "path": "src/forge_controller/model.py",
+              "start_line": 20,
+              "end_line": 30
+            }
+          ],
+          "checks_at_generation": {
+            "task_succeeded": true,
+            "required_sources_read": true,
+            "exact_applicable_patch": false
+          }
+        }
+      ]
+    }
+  ],
+  "source_stable": true,
+  "generation_checker_sha256": "ca71cbf655b97bf5232b439299e1518eee744c405cc7b237ba988bf404959d23",
+  "regraded": true,
+  "senior_review": {
+    "reviewer": "Senior Forge",
+    "reviewed_on": "2026-10-03",
+    "verdicts": [
+      {
+        "reference_mode": "off",
+        "case": "current-model-limit-defaults",
+        "verdict": "revise",
+        "note": "Values and abbreviated references are factually correct, but required exact file:line format is missing."
+      },
+      {
+        "reference_mode": "on",
+        "case": "current-model-limit-defaults",
+        "verdict": "accepted",
+        "note": "Values and exact source lines verified against config.py."
+      },
+      {
+        "reference_mode": "off",
+        "case": "positive-integer-review",
+        "verdict": "rejected",
+        "note": "Incorrectly says positivity alone excludes floats; does not supply requested exact-type alternative."
+      },
+      {
+        "reference_mode": "on",
+        "case": "positive-integer-review",
+        "verdict": "rejected",
+        "note": "Incorrectly says isinstance(value,int) rejects booleans. True is an int in Python."
+      },
+      {
+        "reference_mode": "off",
+        "case": "exact-temperature-patch",
+        "verdict": "rejected",
+        "note": "before does not match actual options line; no patch applied."
+      },
+      {
+        "reference_mode": "on",
+        "case": "exact-temperature-patch",
+        "verdict": "rejected",
+        "note": "Same inapplicable replacement; reviewed reference did not fix it."
+      }
+    ]
+  }
+}

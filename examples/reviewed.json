@@ -1,0 +1,59 @@
+[
+  {
+    "id": "analyst-positive-integer-review",
+    "status": "approved",
+    "agent": "repository_analyst",
+    "repository": "forge",
+    "reviewer": "Senior Forge review",
+    "reviewed_on": "2026-10-03",
+    "source_hashes": {
+      "src/forge_controller/config.py": "d5d01973f8a830434a0e9e2b19e69a31f7f74b090e9e661943ebf0b2a8cbf375"
+    },
+    "terms": [
+      "integer",
+      "validation",
+      "bool",
+      "isinstance",
+      "settings"
+    ],
+    "lesson": "Reviewed lesson: isinstance(True, int) is True in Python. For settings requiring actual positive integers, check type(value) is int and value > 0; reject booleans, floats, strings, None, zero and negatives. Separate existing code behavior from a proposed change. Read current source and cite exact file:line locations before claiming what validation exists. Recommend default, override and invalid-input tests; do not claim proposed tests ran. A positive float such as 1.5 satisfies value > 0: positivity alone never establishes integer type. The exact type check, not the positivity check, rejects floats. For citations, verify each stated line against the current file."
+  },
+  {
+    "id": "implementer-exact-source-patch",
+    "status": "approved",
+    "agent": "implementer",
+    "repository": "forge",
+    "reviewer": "Senior Forge review",
+    "reviewed_on": "2026-10-03",
+    "source_hashes": {
+      "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd"
+    },
+    "terms": [
+      "patch",
+      "json",
+      "before",
+      "after",
+      "temperature"
+    ],
+    "lesson": "Reviewed patch contract: read the actual target line first. Return JSON with path and edits:[{before,after}]. before must match source exactly, including indentation and any included newline; after must preserve unrelated request fields. JSON escaping is decoded once: code should contain ordinary quotes, not literal backslashes before quotes. Do not invent Adapter classes or execute the patch. The reviewer checks applicability and parses resulting Python before applying."
+  },
+  {
+    "id": "analyst-defaults-and-tests",
+    "status": "approved",
+    "agent": "repository_analyst",
+    "repository": "forge",
+    "reviewer": "Senior Forge review",
+    "reviewed_on": "2026-10-03",
+    "source_hashes": {
+      "src/forge_controller/model.py": "2d8e158b696aa6d455844132105e50afb6a66b4fb960681769342115a6610cdd"
+    },
+    "terms": [
+      "defaults",
+      "context_length",
+      "max_output_tokens",
+      "tests",
+      "payload"
+    ],
+    "lesson": "Reviewed workflow: read current Settings and request construction. Report exact defaults with repository-relative file:line citations. Distinguish observed code from a proposal. A complete configuration proposal names fields/environment variables, validates inputs, tests default and overridden serialized payloads plus rejected values, and describes unchanged defaults separately from override resource effects. Do not substitute generic advice to test for concrete test cases."
+  }
+]

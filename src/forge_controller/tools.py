@@ -1,5 +1,6 @@
 """Explicitly granted, read-only source access. No discovery outside a manifest."""
 import os
+import hashlib
 import stat
 from pathlib import PurePosixPath
 
@@ -80,7 +81,8 @@ def execute(settings, owner, agent, name, args):
         if len(text.encode()) > 12000:
             raise ToolDenied()
         return {'repository': repo_id, 'path': path, 'total_lines': len(lines),
-                'start_line': start, 'end_line': min(end, len(lines)), 'content': text}
+                'start_line': start, 'end_line': min(end, len(lines)), 'content': text,
+                'source_sha256': hashlib.sha256(data).hexdigest()}
     except (OSError, UnicodeError):
         raise ToolDenied() from None
     finally:

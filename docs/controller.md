@@ -92,6 +92,7 @@ This role cannot apply patches, edit files, or execute commands. Returned patch 
 | `FORGE_DATABASE` | `state/tasks.sqlite3`; local disk owned by service account |
 | `FORGE_MODEL_URL` | `http://127.0.0.1:11434`; trusted operator configuration |
 | `FORGE_MODEL` | `qwen3:8b` |
+| `FORGE_EXAMPLES_FILE` | Optional reviewed example collection; see [feedback loop](feedback-loop.md) |
 | `FORGE_CONTEXT_LENGTH` | Positive integer; default 4096 context tokens |
 | `FORGE_MAX_OUTPUT_TOKENS` | Positive integer; default 512 output tokens |
 | `FORGE_TASK_TIMEOUT` | 60 seconds including queue wait |

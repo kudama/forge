@@ -10,6 +10,8 @@ uses Forge-side validation; controller-native enforcement is a future step.
 
 ## Workflow
 
+The [UX Designer model evaluation brief](ux-designer-evaluation.md) captures the model comparison, evaluation cases, and Designer/Engineer handoff requested in the Google backlog document. [Issue #32](https://github.com/kudama/forge/issues/32) tracks execution; the brief is not a completed benchmark.
+
 Each open task has exactly one work-state label:
 
 - `work:ready`: Forge has supplied scope, acceptance criteria and validation; no

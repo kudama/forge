@@ -37,6 +37,8 @@ For startup and recovery on macOS, see [service management](docs/mac-services.md
 
 ## Architecture and validation
 
+The planned [UX Designer model evaluation](docs/ux-designer-evaluation.md) compares local and hosted design helpers alongside engineering workers. Its requirements and handoff are captured; no evaluation result or deployed designer is claimed.
+
 The [work-order contracts and native enforcement](docs/work-orders.md) define explicit assignment and
 result contracts, tested through the current controller compatibility path.
 

@@ -20,7 +20,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 
 [tool.setuptools.package-data]
 forge_controller = ["contracts/*.schema.json"]

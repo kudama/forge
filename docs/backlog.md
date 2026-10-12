@@ -4,6 +4,9 @@
 backlog. Source and reviewed changes stay in Git; runtime task state stays in
 SQLite. Chat history and model memory do not substitute for either store.
 Use the agent-task issue template for new bounded work.
+The [GitHub agent identity proposal](github-agent-identities.md) defines a minimal
+App identity and trusted publication boundary for review under issue #37; it does
+not give current local workers GitHub credentials or install a credential service.
 The [Forge-issued work-order design](work-orders.md) defines the assignment and
 result contracts for scoped local delegation. Its current compatibility path
 uses Forge-side validation; controller-native enforcement is a future step.

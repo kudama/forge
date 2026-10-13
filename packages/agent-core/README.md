@@ -4,6 +4,10 @@ Small dependency-free Python 3.12+ package for six peer agents and their
 specialists. Version 0.1 establishes a shared in-process read boundary and result
 contract; domain agents, model loops and deployment remain separate.
 
+The optional standard-library [health/Checkmk adapter](../../docs/agent-health.md)
+reads metadata snapshots without network, model or secret access. Services must
+still implement their own bounded health producer and domain readiness checks.
+
 Install independently of the Forge controller:
 
 ```sh

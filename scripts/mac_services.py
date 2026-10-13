@@ -73,17 +73,21 @@ def run(role, ollama):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['install', 'start', 'stop', 'status', 'remove', 'run'])
-    parser.add_argument('--role', choices=LABELS, default='controller')
+    parser.add_argument('--role', choices=LABELS,
+                        help='select a service for start/stop; run defaults to controller; '
+                             'install/remove/status always affect both')
     parser.add_argument('--ollama', type=Path, default=Path('/opt/homebrew/bin/ollama'))
     args = parser.parse_args()
     if sys.platform != 'darwin':
         raise SystemExit('This launcher requires macOS')
     os.umask(0o077)
     if args.action == 'run':
-        raise SystemExit(run(args.role, args.ollama))
+        raise SystemExit(run(args.role or 'controller', args.ollama))
     directory = Path.home()/'Library/LaunchAgents'
     domain = 'gui/'+str(os.getuid())
     for role, label in LABELS.items():
+        if args.action in {'start', 'stop'} and args.role is not None and role != args.role:
+            continue
         path = directory/(label+'.plist')
         target = domain+'/'+label
         if args.action == 'install':

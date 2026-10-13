@@ -25,7 +25,9 @@ supply a principal, grant, tool implementation or secret reference.
 `Agent.invoke(principal, raw)` requires an exact `Grant` matching the person,
 calling peer (or `None` for a human adapter), target agent, capability, subject and
 resource. There are no wildcard or implicit household/parent grants. Its fixed
-tool registry supplies domain argument validation and handlers. Authorization
+tool registry supplies domain argument validation and handlers. Validators return
+`None` for accepted arguments or raise to reject; Boolean returns fail closed.
+Authorization
 runs before the domain validator or handler. Input dictionaries and grants are
 snapshotted so later caller mutations do not change the issued scope/data.
 

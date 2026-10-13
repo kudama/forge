@@ -122,6 +122,13 @@ def test_domain_validator_rejects_arguments_without_handler(service):
     assert result['code'] == 'invalid_arguments' and calls == ['validate']
 
 
+def test_validator_boolean_return_cannot_silently_accept_invalid_arguments():
+    tool = Tool('fitness.summary', lambda arguments: False,
+                lambda context, arguments: pytest.fail('rejected validator must not execute'))
+    result = Agent('bear', [tool], [GRANT]).invoke(Principal('mike', 'jarvis'), raw())
+    assert result['code'] == 'invalid_arguments'
+
+
 @pytest.mark.parametrize('kind', ['exception', 'unstructured', 'too_large'])
 def test_handler_failure_and_invalid_output_never_expose_content(kind):
     def handler(context, arguments):

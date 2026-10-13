@@ -229,7 +229,8 @@ class Agent:
             return result('denied', 'action_adapter_required')
         arguments = request.arguments
         try:
-            tool.validate_arguments(arguments)
+            if tool.validate_arguments(arguments) is not None:
+                raise ValueError('invalid_validator_result')
         except Exception:
             return result('failed', 'invalid_arguments')
         context = Context(principal, request.request_id, self.agent_id, request.subject_id, request.resource_id)

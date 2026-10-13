@@ -36,8 +36,22 @@ its existing single-instance guard and SQLite locking.
 
 While launchd manages them, use this manager rather than the manual controller
 stop command: KeepAlive would restart a manually stopped child. Updating source
-does not automatically reload processes; stop/start both services after review.
+does not automatically reload processes; stop/start the affected service after review.
 The MCP bridge is still started on demand by Codex, using its private token file.
+
+`start` and `stop` without `--role` operate both services, Ollama first and then
+the controller. Supply `--role controller` for controller-only maintenance that
+keeps the existing Ollama process and loaded models running:
+
+```sh
+.venv/bin/python scripts/mac_services.py stop --role controller
+.venv/bin/python scripts/mac_services.py start --role controller
+```
+
+Use `--role ollama` to select only Ollama. `install`, `remove` and `status`
+retain their existing behavior: they operate on both services even if a role is
+supplied. The internal `run` action defaults to the controller when no role is
+supplied. These selection changes do not reload the running services themselves.
 
 ## Settings and logs
 

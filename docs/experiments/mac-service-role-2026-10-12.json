@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-12",
+  "issue": "https://github.com/kudama/forge/issues/36",
+  "base_revision": "168e898840d3535ff1c442ffc837ceea33dc5da5",
+  "source": "scripts/mac_services.py",
+  "source_sha256": "81e85e4baf2c9204c4354de927c18fb8cdb1cbde07b588c7712360f1650a061d",
+  "local_worker": {
+    "model": "qwen3-coder:30b",
+    "task_ids": ["local-sealed-36-20261012-01", "local-sealed-36-20261012-02"],
+    "transport": "operator-supplied source packet via local Ollama; no controller task or native work order",
+    "tools": [],
+    "settings": {"temperature": 0, "seed": 42, "context_tokens": 8192, "output_tokens": 2048},
+    "execution": "both returned nonblank JSON proposals with normal stop",
+    "review": "Neither complete patch accepted. First retained the controller default and filtered remove; second also filtered install/remove/status. Forge used the proposed omitted-role default and run fallback, corrected filtering to start/stop only, and independently wrote tests and docs.",
+    "runtime_grants_changed": false
+  },
+  "baseline": {"failed": 5, "passed": 12, "scope": "new mocked-launchctl regression tests before patch"},
+  "validation": {
+    "regression_tests_passed": 17,
+    "full_suite_passed": 258,
+    "method": "pytest with subprocess.run mocked; temporary plist directories; no live launchctl calls",
+    "cases": ["explicit controller/ollama start/stop", "omitted role operates both in order", "install/remove/status preserve both-service behavior", "run defaults to controller", "unloaded stop", "bootstrap error propagation"],
+    "live_service_restart": false,
+    "limitation": "Issue text incorrectly described status as role-filtered. Actual both-service behavior is preserved and documented. Real login/reboot validation remains separate."
+  }
+}

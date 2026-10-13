@@ -7,6 +7,10 @@ The package is separately installable at `packages/agent-core` with no runtime
 dependencies. It establishes contracts for scoped reads and peer handoffs while
 preserving the six-agent architecture and existing implementation.
 
+[OpenBao secrets principles](agent-secrets.md) define workload isolation, trusted
+reference resolution, lifetimes, rotation, audit and recovery across all six peers.
+They are design requirements; credential integration and deployment remain pending.
+
 ## Common responsibilities, distinct domains
 
 | Consumer | What the shared base supports | What stays in its domain or adapter |
@@ -49,6 +53,7 @@ was selected. Existing Forge and Mechanic packages are not migrated in this PR.
 | Model/provider | Bounded model proposes capability/arguments; service policy validates; model cannot supply grants/handlers/credentials | Existing Forge Ollama layer remains separate; no new LLM loop |
 | Domain read service | Fixed handler validates arguments and scopes queries from trusted context; sources are fresh or explicitly reported stale/uncertain | Generic read dispatcher plus synthetic example/tests; actual providers pending |
 | Peer handoff | Authenticate both peers; preserve person and purpose, issue a narrower explicit target grant | Exact caller/target/person scope; in-process demonstration only |
+| Credentials | Resolve registered references through OpenBao only after authorization; keep values inside trusted domain adapters | [Secrets principles](agent-secrets.md); no credential client, policy deployment or migration |
 | Persistent context | Domain API stores structured data/provenance and supports correction, deletion, per-person grants and retention | No base-memory database; Postgres/NAS placement remains separate |
 | Scheduling/notifications | Deterministic service owns jobs/delivery, retries and notification rules; source/action grants rechecked at execution | No scheduler here; preserve selected maintenance Postgres/RabbitMQ/OpenBao design |
 | Actions/approval | Exact validated plan, durable authorization, idempotency/reconciliation, locks and postchecks under scoped credentials | Write tools fail closed; Mechanic's existing operational foundation stays separate |

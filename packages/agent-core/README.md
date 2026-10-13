@@ -19,8 +19,10 @@ network authentication or deployed Bear/Training Atlas integration example.
 
 `Principal` is supplied by a trusted authentication adapter. `Request` is parsed
 from bounded strict JSON and has `schema_version`, `request_id`, `target_agent_id`,
-`capability`, `subject_id`, `resource_id` and `arguments`. Request payloads cannot
-supply a principal, grant, tool implementation or secret reference.
+`capability`, `subject_id`, `resource_id` and `arguments`. The envelope has no
+principal, grant, tool implementation or secret-lookup fields. Domain argument
+validators must reject credential/provider overrides inside their own argument
+schemas; the generic JSON parser does not know those domain fields.
 
 `Agent.invoke(principal, raw)` requires an exact `Grant` matching the person,
 calling peer (or `None` for a human adapter), target agent, capability, subject and
@@ -60,3 +62,6 @@ No transport, credential issuer, database, queue, durable memory or automatic
 retry is installed here. `request_id` is correlation, not deduplication. Existing
 Mechanic mutation receipts/locks and Forge work-order grants remain authoritative
 until reviewed integrations adopt this package.
+
+[OpenBao secrets principles](../../docs/agent-secrets.md) define the future
+credential-adapter boundary. No secrets client or migration is installed here.

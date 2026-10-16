@@ -4,6 +4,10 @@ Small dependency-free Python 3.12+ package for six peer agents and their
 specialists. Version 0.1 establishes a shared in-process read boundary and result
 contract; domain agents, model loops and deployment remain separate.
 
+The optional standard-library [health/Checkmk adapter](../../docs/agent-health.md)
+reads metadata snapshots without network, model or secret access. Services must
+still implement their own bounded health producer and domain readiness checks.
+
 Install independently of the Forge controller:
 
 ```sh
@@ -65,3 +69,9 @@ until reviewed integrations adopt this package.
 
 [OpenBao secrets principles](../../docs/agent-secrets.md) define the future
 credential-adapter boundary. No secrets client or migration is installed here.
+
+Structured [agent telemetry](../../docs/agent-telemetry.md) adds atomic publication,
+a bounded Checkmk exporter, optional measured work/verification/latency/freshness/
+usage data, and a separately packaged Checkmk server plugin. The existing local
+health-check adapter remains available. No timers, probes or remediation run on
+import or during collection.

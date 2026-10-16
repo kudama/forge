@@ -37,6 +37,9 @@ For startup and recovery on macOS, see [service management](docs/mac-services.md
 
 ## Architecture and validation
 
+The independently installable [shared agent core](packages/agent-core/README.md)
+provides scoped read contracts for all six peers; see [design and limits](docs/agent-core.md).
+
 The planned [UX Designer model evaluation](docs/ux-designer-evaluation.md) compares local and hosted design helpers alongside engineering workers. Its requirements and handoff are captured; no evaluation result or deployed designer is claimed.
 
 The [work-order contracts and native enforcement](docs/work-orders.md) define explicit assignment and

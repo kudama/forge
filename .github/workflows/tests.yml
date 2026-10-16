@@ -31,3 +31,8 @@ jobs:
           python -m pip check
       - name: Run regression tests
         run: python -m pytest -q
+      - name: Verify standalone agent-core installation
+        run: |
+          python -m venv /tmp/agent-core-check
+          /tmp/agent-core-check/bin/python -m pip install --no-deps ./packages/agent-core
+          /tmp/agent-core-check/bin/python packages/agent-core/examples/peer_handoff.py

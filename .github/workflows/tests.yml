@@ -37,3 +37,4 @@ jobs:
           /tmp/agent-core-check/bin/python -m pip install --no-deps ./packages/agent-core
           /tmp/agent-core-check/bin/python packages/agent-core/examples/peer_handoff.py
           /tmp/agent-core-check/bin/python -m forge_agent_core.health --agent jarvis --instance primary --snapshot /tmp/agent-health-missing --require data
+          /tmp/agent-core-check/bin/python -m forge_agent_core.telemetry --target jarvis primary /tmp/agent-health-missing

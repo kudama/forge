@@ -98,15 +98,15 @@ class Policy:
         object.__setattr__(self, 'required_dependencies', required)
 
 
-def render(policy, snapshot=None, *, now=None, unavailable='snapshot_unavailable'):
-    """Two stable services. Required dependencies come from trusted collector config."""
+def assess(policy, snapshot=None, *, now=None, unavailable='snapshot_unavailable'):
+    """Return states and fixed summaries for local or server-side adapters."""
     now = now or datetime.now(timezone.utc)
     if not isinstance(now, datetime) or now.utcoffset() is None:
         raise ValueError('timezone_required')
     live = ready = 3
     summary = unavailable if unavailable in {'snapshot_unavailable', 'snapshot_invalid'} else 'snapshot_invalid'
     live_summary = ready_summary = summary
-    metric = '-'
+    age_metric = None
     if snapshot is not None:
         age = (now - snapshot.observed_at).total_seconds()
         if snapshot.agent_id != policy.agent_id or snapshot.instance_id != policy.instance_id:
@@ -116,9 +116,9 @@ def render(policy, snapshot=None, *, now=None, unavailable='snapshot_unavailable
         elif age > policy.max_age_seconds:
             live, ready = 2, 3
             live_summary = ready_summary = 'snapshot_stale'
-            metric = f'heartbeat_age={int(age)}'
+            age_metric = max(0, age)
         else:
-            metric = f'heartbeat_age={max(0, int(age))}'
+            age_metric = max(0, age)
             live = 0 if snapshot.alive else 2
             live_summary = 'alive_reported' if snapshot.alive else 'not_alive'
             dependencies = dict(snapshot.dependencies)
@@ -137,12 +137,19 @@ def render(policy, snapshot=None, *, now=None, unavailable='snapshot_unavailable
             else:
                 ready, ready_summary = 0, 'ready_reported'
             live_summary += '; version=' + snapshot.version
+    return live, ready, live_summary, ready_summary, age_metric
+
+
+def render(policy, snapshot=None, *, now=None, unavailable='snapshot_unavailable'):
+    """Two stable services. Required dependencies come from trusted collector config."""
+    live, ready, live_summary, ready_summary, age = assess(policy, snapshot, now=now, unavailable=unavailable)
+    metric = '-' if age is None else f'heartbeat_age={int(age)}'
     prefix = f'Agent {policy.agent_id} {policy.instance_id}'
     return (f'{live} "{prefix} liveness" {metric} {live_summary}\n'
             f'{ready} "{prefix} readiness" - {ready_summary}\n')
 
 
-def read_snapshot(path):
+def read_snapshot(path, *, parser=Snapshot.parse):
     """Bound file reads; refuse links and special files at every path component."""
     path = Path(path).absolute()
     if '..' in path.parts:
@@ -160,7 +167,7 @@ def read_snapshot(path):
         with os.fdopen(fd, 'rb') as stream:
             fd = None
             raw = stream.read(LIMIT+1)
-        return Snapshot.parse(raw)
+        return parser(raw)
     finally:
         if fd is not None:
             os.close(fd)

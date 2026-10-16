@@ -69,3 +69,9 @@ until reviewed integrations adopt this package.
 
 [OpenBao secrets principles](../../docs/agent-secrets.md) define the future
 credential-adapter boundary. No secrets client or migration is installed here.
+
+Structured [agent telemetry](../../docs/agent-telemetry.md) adds atomic publication,
+a bounded Checkmk exporter, optional measured work/verification/latency/freshness/
+usage data, and a separately packaged Checkmk server plugin. The existing local
+health-check adapter remains available. No timers, probes or remediation run on
+import or during collection.

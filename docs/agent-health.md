@@ -123,3 +123,11 @@ cheap readiness checks, monitored host registration and service discovery. Obser
 normal state, stopped producer, required/optional outage, draining and recovery
 on an approved test instance. Verify no personal or secret data in agent output.
 This verifies integration separately from the offline code checks.
+
+## Structured server-side path (October 15, 2026)
+
+The reusable [telemetry producer and exporter](agent-telemetry.md) and
+[Checkmk server package](../integrations/checkmk/README.md) extend this fallback.
+Server-side monitoring centralizes thresholds and graph definitions. The existing
+local-check CLI and Snapshot schema remain compatible. Configure one alerting path
+per instance; richer Report files require the telemetry CLI, not the local CLI.

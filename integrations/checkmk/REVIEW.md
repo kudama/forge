@@ -35,3 +35,19 @@ wrapper paths, test-site install/discovery, graphs, notification/downtime rules,
 stopped producer and recovery. No runtime, server, firewall, notification channel
 or permission grant changed. Native host/process availability checks remain
 necessary. GitHub CI status is separate evidence recorded in the PR checks.
+
+## 2.5 compatibility follow-up — October 15, 2026
+
+Mike supplied 2.5.0p14 Community; the open Checkmk UI independently confirmed it.
+He explicitly authorized installing the server package. The Community Setup menu
+and its search have no extension package manager, matching Checkmk's official
+commercial-only GUI documentation. The configured SSH login was rejected, so no
+package was installed and no server state was changed. Installation awaits an
+existing authenticated site shell, not additional authorization.
+
+Package 0.1.1 expands the compatibility boundary through 2.5 (stops at 2.6.0),
+with exact release v2.5.0p14 pinned to commit
+80e512e3e3132129161881598e1f71f1ea282263 and 129 source hashes. The same 16
+integration cases pass against that release and against the 2.4 baseline locally.
+CI now runs separate 2.4/Python 3.12 and 2.5.0p14/Python 3.13 jobs, each with the
+native Linux package builder. No plugin business logic or protocol changed.

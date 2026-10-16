@@ -1,0 +1,18 @@
+title: AI agent health and telemetry
+agents: linux
+catalog: applications
+license: MIT
+distribution: forge_agents
+description:
+ This check discovers one service per configured agent and stable instance alias.
+ It evaluates reported liveness, readiness, required dependencies and heartbeat
+ age independently of host process checks. Optional bounded numeric telemetry
+ provides work backlog, verification outcomes, latency, source freshness, usage
+ and reconciliation counts. Missing required measurements are UNKNOWN, never zero.
+ All measurements are gauges or rolling-window counts, not lifetime counters.
+ Central Checkmk rules own thresholds. No secret access, LLM calls or remediation.
+item:
+ Agent/instance alias, for example jarvis/primary.
+discovery:
+ One service for each configured identity, including unavailable producers.
+ Empty or malformed sections create a collector transport service in UNKNOWN.

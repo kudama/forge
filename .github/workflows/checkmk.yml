@@ -14,23 +14,33 @@ concurrency:
 
 jobs:
   checkmk:
-    name: Checkmk 2.4 APIs and MKP
+    name: Checkmk ${{ matrix.checkmk }} APIs and MKP
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - checkmk: '2.4.0'
+            python: '3.12'
+            lock: api-source.lock.json
+          - checkmk: '2.5.0p14'
+            python: '3.13'
+            lock: api-source-2.5.0p14.lock.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
       - name: Install pinned test dependencies
         run: python -m pip install -r requirements-mcp.lock
-      - name: Fetch hash-pinned official Checkmk 2.4 APIs
-        run: python integrations/checkmk/fetch_test_api.py /tmp/forge-checkmk-api
+      - name: Fetch hash-pinned official Checkmk APIs
+        run: python integrations/checkmk/fetch_test_api.py /tmp/forge-checkmk-api --lock integrations/checkmk/${{ matrix.lock }}
       - name: Test real APIs, native MKP reader and GNU tar builder
         env:
-          PYTHONPATH: /tmp/forge-checkmk-api/packages/cmk-agent-based:/tmp/forge-checkmk-api/packages/cmk-rulesets:/tmp/forge-checkmk-api/packages/cmk-graphing:/tmp/forge-checkmk-api/packages/cmk-mkp-tool
+          PYTHONPATH: /tmp/forge-checkmk-api/packages/cmk-agent-based:/tmp/forge-checkmk-api/packages/cmk-rulesets:/tmp/forge-checkmk-api/packages/cmk-graphing:/tmp/forge-checkmk-api/packages/cmk-plugin-apis:/tmp/forge-checkmk-api/packages/cmk-mkp-tool
         run: python -m pytest integrations/checkmk/tests -q
       - name: Build deployable package
-        run: python integrations/checkmk/build_mkp.py --output /tmp/forge_agents-0.1.0.mkp
+        run: python integrations/checkmk/build_mkp.py --output /tmp/forge_agents-0.1.1.mkp

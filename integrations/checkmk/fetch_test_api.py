@@ -1,14 +1,14 @@
 """Fetch hash-pinned official Checkmk sources for offline API tests, never production."""
 from concurrent.futures import ThreadPoolExecutor
+import argparse
 import hashlib
 import json
 from pathlib import Path
-import sys
 from urllib.request import urlopen
 
 
-def fetch(destination):
-    lock = json.loads(Path(__file__).with_name('api-source.lock.json').read_text())
+def fetch(destination, lock_path=Path(__file__).with_name('api-source.lock.json')):
+    lock = json.loads(lock_path.read_text())
     def one(item):
         path, digest = item
         target = destination / path
@@ -24,4 +24,8 @@ def fetch(destination):
 
 
 if __name__ == '__main__':
-    fetch(Path(sys.argv[1]))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('destination', type=Path)
+    parser.add_argument('--lock', type=Path, default=Path(__file__).with_name('api-source.lock.json'))
+    args = parser.parse_args()
+    fetch(args.destination, args.lock)

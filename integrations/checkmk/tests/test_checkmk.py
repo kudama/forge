@@ -60,11 +60,13 @@ def test_native_mkp_reader_and_builder_accept_package(tmp_path):
     manifest = extract_manifest(package)
     assert isinstance(manifest, Manifest)
     assert manifest.version_min_required == '2.4.0'
-    assert manifest.version_usable_until == '2.5.0'
+    assert manifest.version_usable_until == '2.6.0'
+    assert manifest.version_packaged == '2.5.0p14'
+    assert str(manifest.version) == '0.1.1'
     assert set(manifest.files) == {PackagePart.CMK_ADDONS_PLUGINS}
     # The upstream builder requires GNU tar; its reader runs on macOS too.
     if 'GNU tar' in subprocess.check_output(['tar', '--version'], text=True):
-        official = create_mkp(manifest, lambda part: stage/'cmk_addons/plugins', '2.4.0')
+        official = create_mkp(manifest, lambda part: stage/'cmk_addons/plugins', manifest.version_packaged)
         assert extract_manifest(official) == manifest
     with tarfile.open(fileobj=io.BytesIO(package), mode='r:gz') as tar:
         with tarfile.open(fileobj=io.BytesIO(tar.extractfile('cmk_addons_plugins.tar').read())) as inner:

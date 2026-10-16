@@ -1,4 +1,4 @@
-"""Build a deterministic Checkmk 2.4 MKP using only the standard library."""
+"""Build a deterministic Checkmk 2.4/2.5 MKP using only the standard library."""
 import argparse
 import gzip
 import io
@@ -31,9 +31,9 @@ def package():
     files['forge_agents/lib/__init__.py'] = b''
     files['forge_agents/lib/LICENSE'] = (ROOT / 'LICENSE').read_bytes()
     manifest = dict(title='Forge AI agent health', name='forge_agents', description='Structured agent health, central policy and telemetry graphs.',
-                    version='0.1.0', author='Forge', download_url='https://github.com/kudama/forge',
+                    version='0.1.1', author='Forge', download_url='https://github.com/kudama/forge',
                     files={'cmk_addons_plugins': sorted(files)})
-    manifest.update({'version.packaged': '2.4.0', 'version.min_required': '2.4.0', 'version.usable_until': '2.5.0'})
+    manifest.update({'version.packaged': '2.5.0p14', 'version.min_required': '2.4.0', 'version.usable_until': '2.6.0'})
     return gzip.compress(archive({'info': (pprint.pformat(manifest) + '\n').encode(),
                                   'info.json': json.dumps(manifest, sort_keys=True).encode(),
                                   'cmk_addons_plugins.tar': archive(files)}), mtime=0)

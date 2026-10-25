@@ -43,7 +43,8 @@ def test_valid_compile_and_result_remain_review_required(assignment):
 
 def test_lua_sources_require_manifest_and_exact_replacements(assignment):
     root, config, order, result, execution = assignment
-    path = 'Info.lua'
+    path = 'SynologyPhotos.lrplugin/Info.lua'
+    (root/path).parent.mkdir()
     (root/path).write_text('-- seed\nreturn {}\n')
     subprocess.run(['git', '-C', str(root), 'add', path], check=True)
     subprocess.run(['git', '-C', str(root), '-c', 'user.name=Test',
@@ -66,7 +67,8 @@ def test_lua_sources_require_manifest_and_exact_replacements(assignment):
 
 
 @pytest.mark.parametrize('path', ['../Info.lua', '.private/Info.lua', 'plugin/../Info.lua',
-                                  '/tmp/Info.lua', 'plugin/Info.lua.pyc', 'plugin/Info.LUA'])
+                                  '/tmp/Info.lua', 'plugin/Info.lua.pyc', 'plugin/Info.LUA',
+                                  'plugin/.hidden/Info.lua', '.plugin.lrplugin/Info.lua'])
 def test_lua_support_keeps_unsafe_and_unapproved_suffixes_denied(assignment, path):
     _, config, order, _, _ = assignment
     order['source']['files'][0]['path'] = path

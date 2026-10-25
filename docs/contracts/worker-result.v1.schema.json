@@ -44,7 +44,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)[A-Za-z0-9_/-]+\\.(py|md|toml|lua)$",
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.)(?!.*\\\\)[A-Za-z0-9_./-]+\\.(py|md|toml|lua)$",
             "maxLength": 256
           },
           "start_line": {
@@ -79,7 +79,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)[A-Za-z0-9_/-]+\\.(py|md|toml|lua)$",
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.)(?!.*\\\\)[A-Za-z0-9_./-]+\\.(py|md|toml|lua)$",
             "maxLength": 256
           },
           "old": {

@@ -7,6 +7,12 @@ backlog or expand their permissions independently.
 
 ## Contracts
 
+Explicit source manifests and work-order/result paths accept `.py`, `.md`, `.toml`
+and `.lua`. Lua is read as UTF-8 source; workers receive no Lua execution tool.
+Every file must already be committed and explicitly selected. For a new project,
+Forge seeds tracked files before delegation; workers propose exact replacements
+and still cannot create files, execute commands or apply changes.
+
 - [Work order schema](contracts/work-order.v1.schema.json) and
   [source-pinned example](contracts/work-order.v1.example.json).
 - [Worker result schema](contracts/worker-result.v1.schema.json) and

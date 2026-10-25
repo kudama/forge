@@ -70,7 +70,7 @@ class Settings:
                 if not isinstance(file, str):
                     raise ValueError('Invalid source path')
                 path = Path(file)
-                if path.is_absolute() or path.as_posix() != file or any(p.startswith('.') for p in path.parts) or path.suffix not in {'.py', '.md', '.toml'}:
+                if path.is_absolute() or path.as_posix() != file or any(p.startswith('.') for p in path.parts) or path.suffix not in {'.py', '.md', '.toml', '.lua'}:
                     raise ValueError('Only explicit non-hidden source paths are allowed')
 
     def model_for(self, agent):

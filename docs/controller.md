@@ -2,16 +2,145 @@
 
 ## Install
 
-From the Forge checkout, use Python 3.12 or newer:
+Use the commands below from the Forge checkout, one block at a time. Stop on
+any failed command. Blocks omit shell comments: interactive zsh may interpret a
+pasted `#` line as a command and report `zsh: command not found: #`.
+
+### Python and Homebrew on a fresh Mac
+
+The package declares `requires-python = ">=3.12"`; Python 3.9 is unsupported.
+The [CI workflow](../.github/workflows/tests.yml) targets Python 3.12, and the
+[historical Mac validation](controller-validation.md) records Python 3.14.8.
+There is no multi-version support matrix: the minimum declaration does not prove
+that every newer interpreter works with the pinned dependencies. Prefer a
+versioned Homebrew Python 3.12 for a new Mac environment to match CI.
+
+Check the host and available tooling first:
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.lock
+hostname
+command -v brew
+command -v python3
+python3 --version
+```
+
+A fresh Mac may have no Homebrew. If `brew` is missing, check whether
+`/opt/homebrew/bin/brew` already exists before installing another copy. If absent,
+follow the [official Homebrew installation instructions](https://docs.brew.sh/Installation),
+including the installer's shell setup steps, then repeat the checks.
+Homebrew's default Apple Silicon prefix is `/opt/homebrew`; use the actual
+prefix on other installations.
+
+Install [versioned Python 3.12](https://formulae.brew.sh/formula/python@3.12)
+if it is not already available:
+
+```sh
+brew list --versions python@3.12
+```
+
+If absent:
+
+```sh
+brew install python@3.12
+```
+
+Select its interpreter explicitly; do not rely on an unversioned `python3`:
+
+```sh
+FORGE_PYTHON="$(brew --prefix python@3.12)/bin/python3.12"
+"$FORGE_PYTHON" --version
+```
+
+Before creating a virtual environment, check for an existing one:
+
+```sh
+test ! -e .venv && test ! -L .venv
+```
+
+If this check fails, preserve the environment and inspect
+`.venv/bin/python --version` and `.venv/pyvenv.cfg`. Do not delete or rebuild an
+environment used by a running service. A working supported environment can be
+reused; a failed or unsupported one needs a deliberate replacement after stopping
+its users and preserving its version details. Do not copy a virtual environment
+from another Mac.
+
+For a new environment only:
+
+```sh
+"$FORGE_PYTHON" -m venv .venv
+```
+
+### Install and verify dependencies
+
+Upgrade packaging tools before the editable pyproject installation, then install
+the full test/MCP dependency set, matching CI:
+
+```sh
+.venv/bin/python -m pip install --upgrade pip setuptools wheel
+.venv/bin/python -m pip install -r requirements-mcp.lock
 .venv/bin/python -m pip install --no-deps -e .
+.venv/bin/python -m pip check
 .venv/bin/python -m pytest -q
 ```
 
-The lock includes test dependencies. No global Python packages are required. Keep local secrets and task state outside Git; `.secrets/` and `state/` are ignored. For development, create a credential without printing it:
+`requirements-mcp.lock` includes `requirements.lock` and pins the optional
+MCP SDK. The core lock includes pytest but omits MCP; a controller-only runtime
+can use it, but the current full test suite imports MCP in
+`test_native_mcp_submission`. Install the MCP lock before running that suite or
+using the [MCP bridge](mcp.md). Do not change pins merely to bypass an installation
+error. Record the interpreter, pip version, failing command and final test summary:
+
+```sh
+.venv/bin/python --version
+.venv/bin/python -m pip --version
+git rev-parse HEAD
+```
+
+No global Python packages are required. Keep local secrets and task state outside
+Git; `.secrets/` and `state/` are ignored.
+
+### Foundry setup evidence — 2026-11-13
+
+Operator-provided output in the “Install Forge Dependencies” chat and follow-up
+request reported:
+
+- The fresh Mac initially had no `brew`.
+- Unversioned `python3` resolved to `/usr/bin/python3`, Python 3.9.6;
+  `/opt/homebrew/bin/python3` reported Python 3.15.2.
+- pip 21.2.4 rejected editable installation of the pyproject-only project.
+  Dependency installation also failed to resolve `annotated-types==0.8.0`,
+  and pytest was then unavailable. The cause of that resolution failure was not
+  independently established; old pip alone is not a confirmed explanation.
+- A later installation reported `forge-controller-0.1.0` installed and
+  **334 passed, 1 failed, 1 skipped**. The failure was
+  `ModuleNotFoundError: No module named 'mcp'` in
+  `tests/test_native_work_orders.py::test_native_mcp_submission`.
+- Pasted shell comments produced `zsh: command not found: #`.
+
+Source inspection confirms the Python minimum, CI's Python 3.12/MCP-lock install,
+the MCP pin and that test's SDK import. Installing the MCP lock is the prescribed
+next step; no successful Foundry rerun, complete Python 3.15.2 validation, model
+installation, private-config migration, service startup or reboot acceptance has
+been observed here. Test counts can change with the checkout revision.
+
+### Existing installation or host migration
+
+Before creating credentials or starting a replacement controller, inspect existing
+private configuration, source grants, database, MCP token and handoff journal on
+both hosts. Preserve the Macbox identities and task history. Use the
+[backup/recovery workflow](backup-recovery.md) to verify a private snapshot and
+stage recovery separately; do not overwrite Foundry state or copy an active raw
+SQLite file. Reconcile host-specific source paths and the journal's endpoint
+identity before cutover. Keep uncertain submissions and receipts; do not replay
+them. Reuse or deliberately migrate approved credentials rather than generating
+a fresh production principal set. Do not publish private files or token values.
+
+After dependencies/tests pass, inspect `ollama list` and download only missing
+configured models. Validate the staged private profile before
+[service installation](mac-services.md). Foundry does not become authoritative
+until migration and authenticated runtime checks succeed.
+
+For development, create a credential without printing it:
 
 ```sh
 .venv/bin/python - <<'PY'
@@ -29,6 +158,10 @@ PY
 ```
 
 Each principal needs a unique random bearer token of at least 32 characters, an `agents` list containing `forge`, `repository_analyst`, and/or `implementer`, and `services: ["prototype"]` or `[]`. An optional `repositories` list grants explicit repository IDs. Unknown fields are rejected. The file must have owner-only permissions. Never paste tokens into Git, commands, URLs, logs, or PRs. Rotate/revoke by editing the private file and restarting the controller; in-flight tasks should be stopped during revocation.
+
+For a verified snapshot restore or direct private-network HTTPS, follow
+[the migration procedure](private-network-migration.md). The launcher defaults
+to loopback; non-loopback binding requires TLS and existing authentication.
 
 ## Start locally
 

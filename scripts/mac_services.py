@@ -74,8 +74,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['install', 'start', 'stop', 'status', 'remove', 'run'])
     parser.add_argument('--role', choices=LABELS,
-                        help='select a service for start/stop; run defaults to controller; '
-                             'install/remove/status always affect both')
+                        help='select one service; run defaults to controller; '
+                             'other actions default to both')
     parser.add_argument('--ollama', type=Path, default=Path('/opt/homebrew/bin/ollama'))
     args = parser.parse_args()
     if sys.platform != 'darwin':
@@ -86,12 +86,12 @@ def main():
     directory = Path.home()/'Library/LaunchAgents'
     domain = 'gui/'+str(os.getuid())
     for role, label in LABELS.items():
-        if args.action in {'start', 'stop'} and args.role is not None and role != args.role:
+        if args.role is not None and role != args.role:
             continue
         path = directory/(label+'.plist')
         target = domain+'/'+label
         if args.action == 'install':
-            if not args.ollama.is_file() or not (ROOT/'.venv/bin/python').is_file():
+            if (role == 'ollama' and not args.ollama.is_file()) or not (ROOT/'.venv/bin/python').is_file():
                 raise SystemExit('Install the local Python environment and Ollama first')
             directory.mkdir(parents=True, exist_ok=True)
             content = plistlib.dumps(definition(role, args.ollama.resolve()))

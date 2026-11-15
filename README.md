@@ -28,9 +28,11 @@ them. A completed task is not a guarantee that its output is correct.
 ## Getting started
 
 The prototype uses Python 3.12 or newer and an existing Ollama installation.
-Follow [setup and operation](docs/controller.md) to install the Python environment,
-configure private credentials and source grants, select installed models, and
-start the controller. Credentials and task state stay outside version control.
+Start with [installation and preflight](docs/installation.md) to inspect the host
+and create a verified Python environment without replacing existing state.
+Then follow [setup and operation](docs/controller.md) for private credentials,
+source grants, installed models and controller startup. Credentials and task
+state stay outside version control.
 
 For desktop integration, see the [local MCP bridge](docs/mcp.md).
 For startup and recovery on macOS, see [service management](docs/mac-services.md).

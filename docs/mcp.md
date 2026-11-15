@@ -62,8 +62,11 @@ codex mcp add forge_local \
 
 Settings contain the credential **path**, not the token. Absolute paths permit
 launching from any client working directory. `FORGE_MCP_TOKEN_FILE` is required;
-`FORGE_CONTROLLER_URL` defaults to `http://127.0.0.1:8787` and this first bridge
-accepts only loopback HTTP URLs without embedded credentials/query/path suffixes.
+`FORGE_CONTROLLER_URL` defaults to `http://127.0.0.1:8787` and the bridge
+accepts loopback HTTP or explicit HTTPS URLs without embedded credentials/query/path suffixes.
+HTTPS requires `FORGE_MCP_CA_FILE`, a path to the explicitly trusted server
+certificate/CA bundle. Certificate and hostname verification remain enabled;
+redirects and environment proxy/certificate overrides are disabled.
 The token file must be a regular owner-only file, not a symlink, with at most
 4 KiB and exactly `{"token":"..."}`. SDK stdio uses stdout for protocol messages;
 diagnostics go to stderr, with warning-level logging and sanitized upstream errors.
@@ -73,6 +76,45 @@ or refresh the client session if its tool catalog predates registration. An
 SDK stdio test proves the bridge protocol works; it does not prove an already
 open chat has refreshed its tool catalog. To remove registration, use
 `codex mcp remove forge_local`; revoke the controller principal separately.
+
+## Move a desktop client to another private host
+
+Keep the stdio bridge on the computer hosting the chat; the controller, source
+manifests, task database and Ollama models can reside on another host. The local
+bridge is only an authenticated HTTPS client. Stopping local Ollama/controller
+services does not require stopping that client process or removing its Python
+environment. Use a bridge checkout containing HTTPS support.
+
+Configure the existing client registration with the remote URL and explicit
+certificate trust, keeping the private token in a file rather than settings:
+
+```sh
+codex mcp add forge_local \
+  --env "FORGE_MCP_TOKEN_FILE=$PWD/.secrets/mcp-token.json" \
+  --env FORGE_CONTROLLER_URL=https://forge.example.internal:8787 \
+  --env "FORGE_MCP_CA_FILE=$PWD/.secrets/server-cert.pem" \
+  -- "$PWD/.venv/bin/python" -m forge_controller.mcp_bridge
+```
+
+Transfer only the public server certificate over an authenticated channel; never
+the server TLS private key. Keep using an existing scoped principal or issue a
+separately approved one. For an editable client checkout with a separately managed
+Python environment, set `PYTHONPATH` explicitly to that checkout's `src` directory;
+do not accidentally launch an older installed bridge that rejects HTTPS.
+
+Retain the old registration for rollback. Restart the configured MCP server in
+the desktop app after changing its settings. Configuration inspection and an SDK
+stdio test do not prove that an open chat has switched connections. From the actual
+chat, retrieve a known task present only on the destination, then submit and
+review one bounded development task. Record the selected model and successful
+source-read audit. No local-worker write or command permissions are added by this
+connection change.
+
+Only then check that old-host tasks are settled and stop its controller/Ollama
+services. Keep private snapshots, journals and the thin MCP client's dependencies;
+reconcile old endpoint-bound receipts rather than replaying them. A fresh-client
+or app-reconnect check after source shutdown verifies there is no silent fallback.
+There is no automatic fallback to the old host.
 
 ## Tools and workflow
 

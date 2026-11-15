@@ -2,6 +2,7 @@
 import json
 import os
 import re
+import ssl
 import stat
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -20,12 +21,25 @@ from pydantic import Field
 class BridgeSettings:
     token_file: Path
     controller_url: str = 'http://127.0.0.1:8787'
+    ca_file: Path | None = None
 
     def __post_init__(self):
         url = urlparse(self.controller_url)
-        if (url.scheme != 'http' or url.hostname not in {'127.0.0.1', 'localhost', '::1'}
+        if (url.scheme not in {'http', 'https'} or not url.hostname
             or url.username or url.password or url.path not in {'', '/'} or url.query or url.fragment):
-            raise ValueError('Bridge requires a loopback HTTP controller URL')
+            raise ValueError('Invalid bridge controller URL')
+        if url.scheme == 'http' and url.hostname not in {'127.0.0.1', 'localhost', '::1'}:
+            raise ValueError('Plain HTTP bridge connections must remain on loopback')
+        if url.scheme == 'https' and self.ca_file is None:
+            raise ValueError('HTTPS bridge connections require an explicit trusted CA file')
+        if url.scheme == 'http' and self.ca_file is not None:
+            raise ValueError('CA file requires an HTTPS controller URL')
+        _ = url.port  # Reject malformed ports before starting stdio.
+
+    def verification(self):
+        if self.ca_file is None:
+            return True
+        return ssl.create_default_context(cafile=str(self.ca_file))
 
     def token(self):
         mode = self.token_file.stat().st_mode
@@ -44,7 +58,8 @@ class BridgeSettings:
     @classmethod
     def from_environment(cls):
         return cls(Path(os.environ['FORGE_MCP_TOKEN_FILE']).expanduser(),
-                   os.environ.get('FORGE_CONTROLLER_URL', 'http://127.0.0.1:8787'))
+                   os.environ.get('FORGE_CONTROLLER_URL', 'http://127.0.0.1:8787'),
+                   Path(os.environ['FORGE_MCP_CA_FILE']).expanduser() if os.environ.get('FORGE_MCP_CA_FILE') else None)
 
 
 Agent = Literal['forge', 'repository_analyst', 'implementer']
@@ -79,7 +94,7 @@ def create_bridge(settings, transport=None):
         token = settings.token()
         async with httpx.AsyncClient(base_url=settings.controller_url.rstrip('/'),
             headers={'Authorization':'Bearer '+token}, timeout=10, trust_env=False,
-            follow_redirects=False, transport=transport) as connection:
+            follow_redirects=False, transport=transport, verify=settings.verification()) as connection:
             client = connection
             try:
                 yield {}
@@ -165,6 +180,7 @@ def main():
     try:
         settings = BridgeSettings.from_environment()
         settings.token()  # Fail before opening stdio; never print credentials.
+        settings.verification()
     except (OSError, KeyError, ValueError, TypeError):
         raise SystemExit('Invalid Forge MCP configuration or private credential') from None
     create_bridge(settings).run(transport='stdio')

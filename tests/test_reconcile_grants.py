@@ -81,7 +81,11 @@ def test_refuses_unsafe_or_changed_state_without_writing(deployment,failure):
 
 def test_source_probe_requires_matching_allowed_read_audit(capsys):
     def transport(request):
-        if request.method=='POST':return httpx.Response(202,json={'id':'a'*32})
+        if request.method=='POST':
+            task=json.loads(request.content)
+            assert task['tools']==['list_repository_files','read_repository_file']
+            assert 'First list approved files' in task['prompt']
+            return httpx.Response(202,json={'id':'a'*32})
         return httpx.Response(200,json={'status':'succeeded','audit':[{
             'tool':'read_repository_file','status':'allowed','repository':'app','path':'README.md'}]})
     with httpx.Client(base_url='https://test',transport=httpx.MockTransport(transport)) as client:

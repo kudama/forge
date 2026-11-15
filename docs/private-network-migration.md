@@ -2,7 +2,7 @@
 
 This procedure restores an existing prototype into an unused checkout. It does
 not migrate repository working copies, GitHub credentials or model weights.
-Use [clean installation](controller.md) first; keep project migration and GitHub
+Use [clean installation](installation.md) first; keep project migration and GitHub
 access as separate acceptance checks. No new runtime dependency is introduced.
 
 ## Before restoring
@@ -56,16 +56,30 @@ Continue only if creation succeeds; do not overwrite an existing TLS directory.
   -out "$HOME/forge-tls/server-cert.pem")
 ```
 
-Restore from the checkout, mapping only repository IDs whose approved working
-copies exist on the destination:
+Preview from the destination checkout, mapping only repository IDs whose approved
+working copies exist there:
 
 ```sh
-.venv/bin/python scripts/restore.py /private/path/to/snapshot \
+.venv/bin/python scripts/restore.py /private/path/to/snapshot --plan \
   --repository "forge=$PWD" \
   --host 192.168.1.20 \
   --certfile "$HOME/forge-tls/server-cert.pem" \
   --keyfile "$HOME/forge-tls/server-key.pem"
 ```
+
+The preview runs the same snapshot, configuration, TLS and staged database checks
+as restore, using temporary owner-only staging files that are removed on return.
+It publishes no `.secrets/` or `state/` directories. Its summary includes counts,
+mapped roots and disabled repository IDs, never credentials or handoff contents.
+It is a validation preview, not a reservation or a running-service acceptance
+result. It does not exercise the selected-file read policy; use grant/source
+checks below after the project files and controller are ready.
+
+Review the summary, then repeat the same command without `--plan` to restore.
+Restore revalidates all inputs and refuses newly introduced destination conflicts.
+The historical command without `--plan` still performs a restore; the default was
+preserved for compatibility. Never remove an existing private directory just to
+make a preview or restore pass.
 
 The restore keeps principal identities/tokens, the MCP token, database history,
 reviewed examples and all handoff records. Repository mappings retain their
@@ -170,9 +184,9 @@ To repeat from another host, transfer the public certificate and checker through
 SSH and use that client's existing scoped token-only file. Never transfer the
 server private key or share the full principals database with another client.
 
-The existing convenience client, MCP bridge and handoff CLI currently target
-local HTTP. This server change does not make those clients HTTPS/network-capable.
-Use an HTTPS API client with explicit certificate trust for network acceptance.
+The [MCP bridge](mcp.md) supports verified HTTPS with an explicit CA file. The
+convenience client and handoff CLI still target local HTTP; do not infer that
+every client became network-capable. Use the HTTPS checker for network acceptance.
 Saved handoff records retain their old endpoints: do not rewrite their endpoint
 strings or resubmit their work to bypass reconciliation. Verify known task IDs
 against the recovered database using authenticated GET requests. Retire source
@@ -194,6 +208,15 @@ matched that snapshot at implementation time, with zero active tasks.
 
 Automated validation covers real local HTTPS, certificate trust, authentication,
 restore integrity/overwrite refusal, preserved receipts and service selection.
-Foundry restore/startup, remote authenticated inference, firewall reachability,
-login recovery, GitHub connectivity and complete project/history migration still
-require target-host evidence. Do not mark those complete from CI alone.
+2026-11-15 follow-up: the operator reported Foundry restore/startup, authenticated
+HTTPS inference locally and from Macbox, GitHub reads/project access and 20
+projects with 48 historical checkouts imported. Native MCP tasks were independently
+exercised through Foundry after Macbox services were disabled (see #67). These
+reports do not establish reboot/login recovery or a supported general-purpose
+project importer; [#64](https://github.com/kudama/forge/issues/64) retains that work.
+
+The preview increment is tested with synthetic private snapshots: unchanged
+source/target bytes and permissions, temporary-file cleanup, shared validation
+failures, successful restore after preview, and refusal of a destination conflict
+introduced after preview. No preview or restore was run against the live Foundry
+deployment for this increment. Do not mark target-host acceptance complete from CI.

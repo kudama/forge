@@ -72,19 +72,21 @@ def test_restore_preserves_tokens_database_receipts_and_original_snapshot(migrat
         restore(snapshot, target, {'forge': target})
 
 
+@pytest.mark.parametrize('apply', [True, False])
 @pytest.mark.parametrize('existing', ['.secrets', 'state', 'symlink'])
-def test_existing_state_is_never_merged(migration, existing):
+def test_existing_state_is_never_merged(migration, existing, apply):
     snapshot, target = migration
     if existing == 'symlink':
         (target/'.secrets').symlink_to(target/'nonexistent')
     else:
         (target/existing).mkdir()
     with pytest.raises(ValueError, match='preserving'):
-        restore(snapshot, target, {'forge': target})
+        restore(snapshot, target, {'forge': target}, apply=apply)
 
 
+@pytest.mark.parametrize('apply', [True, False])
 @pytest.mark.parametrize('failure', ['checksum', 'new_grant', 'missing_root', 'invalid_principal', 'tls'])
-def test_invalid_restore_never_publishes_partial_state(migration, failure):
+def test_invalid_restore_never_publishes_partial_state(migration, failure, apply):
     snapshot, target = migration
     mapping = {'forge': target}; listener = None
     if failure == 'checksum':
@@ -101,6 +103,74 @@ def test_invalid_restore_never_publishes_partial_state(migration, failure):
     else:
         listener = {'FORGE_LISTEN_HOST': '10.0.0.106'}
     with pytest.raises(ValueError):
-        restore(snapshot, target, mapping, listener)
+        restore(snapshot, target, mapping, listener, apply=apply)
     assert not (target/'.secrets').exists() and not (target/'state').exists()
     assert not list(target.glob('.forge-restore-*'))
+
+
+def tree_evidence(root):
+    return {str(path.relative_to(root)):(path.stat().st_mode,
+            path.read_bytes() if path.is_file() else None)
+            for path in [root, *root.rglob('*')]}
+
+
+def test_preview_preserves_inputs_and_target_then_apply_revalidates(migration):
+    snapshot, target = migration
+    before = tree_evidence(snapshot), tree_evidence(target)
+    result = restore(snapshot, target, {'forge': target}, apply=False)
+    assert result == {'verified':True, 'task_count':1, 'git_commit':'a'*40,
+        'manifest_version':2, 'handoff_count':3, 'restored':False,
+        'validation_only':True, 'mapped_repositories':{'forge':str(target)},
+        'disabled_repositories':['missing'], 'services_started':False,
+        'handoff_endpoints_unchanged':True}
+    assert before == (tree_evidence(snapshot), tree_evidence(target))
+    assert restore(snapshot, target, {'forge': target})['restored']
+
+
+def test_conflict_created_after_preview_blocks_apply(migration):
+    snapshot, target = migration
+    restore(snapshot, target, {'forge': target}, apply=False)
+    (target/'state').mkdir()
+    (target/'state/keep').write_text('preserve newer state')
+    before = tree_evidence(target)
+    with pytest.raises(ValueError, match='preserving'):
+        restore(snapshot, target, {'forge': target})
+    assert tree_evidence(target) == before
+
+
+@pytest.mark.parametrize('apply', [True, False])
+def test_changed_snapshot_during_validation_cleans_staging(migration, monkeypatch, apply):
+    snapshot, target = migration
+    original = backup.verify
+    calls = []
+    def verify(path):
+        calls.append(path)
+        if len(calls) == 2:
+            raise ValueError('Snapshot changed during validation')
+        return original(path)
+    monkeypatch.setattr(backup, 'verify', verify)
+    before = tree_evidence(target)
+    with pytest.raises(ValueError, match='Snapshot changed'):
+        restore(snapshot, target, {'forge':target}, apply=apply)
+    assert len(calls) == 2
+    assert tree_evidence(target) == before
+
+
+@pytest.mark.parametrize('plan', [True, False])
+def test_cli_preview_flag_preserves_default_apply(migration, monkeypatch, capsys, plan):
+    import importlib
+    module = importlib.import_module('scripts.restore')
+    snapshot, target = migration
+    calls = []
+    def fake_restore(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {'restored':kwargs['apply']}
+    monkeypatch.setattr(module, 'restore', fake_restore)
+    monkeypatch.setattr(module.os, 'umask', lambda value: None)
+    monkeypatch.setattr(module.sys, 'argv', ['restore.py', str(snapshot),
+        '--checkout', str(target), '--repository', 'forge='+str(target),
+        *(['--plan'] if plan else [])])
+    module.main()
+    assert calls[0][0][:3] == (snapshot, target, {'forge':target})
+    assert calls[0][1] == {'apply':not plan}
+    assert json.loads(capsys.readouterr().out) == {'restored':not plan}

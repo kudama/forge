@@ -13,7 +13,7 @@ from scripts.controller import server_command
 from forge_controller.config import Settings
 
 
-def restore(snapshot, root, repositories, listener=None):
+def restore(snapshot, root, repositories, listener=None, *, apply=True):
     snapshot = snapshot.expanduser().absolute()
     root = root.expanduser().absolute()
     if root.resolve() != root or not root.is_dir():
@@ -88,6 +88,11 @@ def restore(snapshot, root, repositories, listener=None):
             raise ValueError('Restored task count mismatch')
         # Recheck the unchanged source before publishing any destination files.
         backup.verify(snapshot)
+        if not apply:
+            return {**evidence, 'restored': False, 'validation_only': True,
+                    'mapped_repositories': {name: repo['root'] for name, repo in mapped.items()},
+                    'disabled_repositories': disabled, 'services_started': False,
+                    'handoff_endpoints_unchanged': True}
         created = []
         try:
             for name in ('.secrets', 'state'):
@@ -113,6 +118,8 @@ def main():
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--certfile')
     parser.add_argument('--keyfile')
+    parser.add_argument('--plan', action='store_true',
+                        help='validate using temporary private staging; do not publish restored state')
     args = parser.parse_args()
     repositories = {}
     for item in args.repository:
@@ -126,7 +133,7 @@ def main():
     if args.keyfile:
         listener['FORGE_TLS_KEYFILE'] = args.keyfile
     os.umask(0o077)
-    print(json.dumps(restore(args.snapshot, args.checkout, repositories, listener)))
+    print(json.dumps(restore(args.snapshot, args.checkout, repositories, listener, apply=not args.plan)))
 
 
 if __name__ == '__main__':

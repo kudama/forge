@@ -159,6 +159,10 @@ PY
 
 Each principal needs a unique random bearer token of at least 32 characters, an `agents` list containing `forge`, `repository_analyst`, and/or `implementer`, and `services: ["prototype"]` or `[]`. An optional `repositories` list grants explicit repository IDs. Unknown fields are rejected. The file must have owner-only permissions. Never paste tokens into Git, commands, URLs, logs, or PRs. Rotate/revoke by editing the private file and restarting the controller; in-flight tasks should be stopped during revocation.
 
+For a verified snapshot restore or direct private-network HTTPS, follow
+[the migration procedure](private-network-migration.md). The launcher defaults
+to loopback; non-loopback binding requires TLS and existing authentication.
+
 ## Start locally
 
 If Ollama is not already running, start it in another terminal using the installed binary:

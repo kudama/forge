@@ -34,6 +34,8 @@ start the controller. Credentials and task state stay outside version control.
 
 For desktop integration, see the [local MCP bridge](docs/mcp.md).
 For startup and recovery on macOS, see [service management](docs/mac-services.md).
+For verified restoration and authenticated LAN HTTPS, see
+[private-network migration](docs/private-network-migration.md).
 
 ## Architecture and validation
 

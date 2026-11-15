@@ -63,26 +63,29 @@ def test_default_operates_both_in_existing_order(launcher, action):
 
 
 @pytest.mark.parametrize('role', [None, 'controller', 'ollama'])
-def test_status_preserves_both_service_output(launcher, role, capsys):
+def test_status_selects_requested_service(launcher, role, capsys):
     invoke, _ = launcher
     calls = invoke('status', role)
-    assert calls == [['launchctl', 'print', 'gui/501/' + label]
-                     for label in mac_services.LABELS.values()]
+    labels = [mac_services.LABELS[role]] if role else list(mac_services.LABELS.values())
+    assert calls == [['launchctl', 'print', 'gui/501/' + label] for label in labels]
     output = capsys.readouterr().out
-    assert all(label + ' loaded' in output for label in mac_services.LABELS.values())
+    assert all(label + ' loaded' in output for label in labels)
 
 
 @pytest.mark.parametrize('role', [None, 'controller', 'ollama'])
-def test_install_and_remove_preserve_both_definitions(launcher, role):
+def test_install_and_remove_select_requested_definitions(launcher, role):
     invoke, home = launcher
     assert invoke('install', role) == []
-    paths = [home / 'Library/LaunchAgents' / (label + '.plist')
-             for label in mac_services.LABELS.values()]
+    labels = [mac_services.LABELS[role]] if role else list(mac_services.LABELS.values())
+    paths = [home / 'Library/LaunchAgents' / (label + '.plist') for label in labels]
     assert all(path.is_file() and path.stat().st_mode & 0o777 == 0o600 for path in paths)
     calls = invoke('remove', role)
     assert [call for call in calls if call[1] == 'bootout'] == [
-        ['launchctl', 'bootout', 'gui/501/' + label] for label in mac_services.LABELS.values()]
+        ['launchctl', 'bootout', 'gui/501/' + label] for label in labels]
     assert all(not path.exists() for path in paths)
+    if role:
+        other = next(name for name in mac_services.LABELS if name != role)
+        assert not (home/'Library/LaunchAgents'/(mac_services.LABELS[other]+'.plist')).exists()
 
 
 @pytest.mark.parametrize('role', [None, 'controller', 'ollama'])

@@ -90,15 +90,19 @@ keeps the existing Ollama process and loaded models running:
 .venv/bin/python scripts/mac_services.py start --role controller
 ```
 
-Use `--role ollama` to select only Ollama. `install`, `remove` and `status`
-retain their existing behavior: they operate on both services even if a role is
-supplied. The internal `run` action defaults to the controller when no role is
-supplied. These selection changes do not reload the running services themselves.
+Use `--role ollama` to select only Ollama. `--role` now selects one service for
+all actions, including `install`, `remove` and `status`; without it, those actions
+still operate on both. The internal `run` action defaults to the controller.
+These selection changes do not reload running services themselves.
+
+For an existing loopback Ollama with a network controller, see
+[private-network HTTPS and migration](private-network-migration.md). Only the
+controller needs a new LaunchAgent.
 
 ## Settings and logs
 
 Ollama binds only `127.0.0.1:11434`, disables cloud, uses one parallel request and
-one loaded model, with a 4096-token default context. Forge binds only
+one loaded model, with a 4096-token default context. Forge defaults to
 `127.0.0.1:8787` with one worker and reads `.secrets/local-controller.json`.
 Credentials remain in private files, outside the launchd definitions. Neither
 service exposes a public listener. Models still unload after five idle minutes.

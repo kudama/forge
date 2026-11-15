@@ -72,7 +72,8 @@ ownership. A completed environment is not a running-controller acceptance result
 - **Existing host migration:** use [verified snapshot restore and grant reconciliation](private-network-migration.md),
   then test authenticated readiness/inference and selected-source access. Project
   working copies/history, GitHub credentials and controller state are separate
-  acceptance checks. The Foundry project-export/import artifact is not yet a
+  acceptance checks. [Project package transport verification](project-history-migration.md)
+  is available before import. The Foundry project-export/import artifact is not yet a
   supported general-purpose Forge command; #64 retains that work.
 - **Desktop MCP client only:** after environment installation, follow
   [MCP registration](mcp.md), using the remote HTTPS controller and explicit

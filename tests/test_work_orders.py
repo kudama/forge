@@ -41,6 +41,41 @@ def test_valid_compile_and_result_remain_review_required(assignment):
     assert validate_result(order,result,execution,config,'operator')['review_required'] is True
 
 
+def test_lua_sources_require_manifest_and_exact_replacements(assignment):
+    root, config, order, result, execution = assignment
+    path = 'SynologyPhotos.lrplugin/Info.lua'
+    (root/path).parent.mkdir()
+    (root/path).write_text('-- seed\nreturn {}\n')
+    subprocess.run(['git', '-C', str(root), 'add', path], check=True)
+    subprocess.run(['git', '-C', str(root), '-c', 'user.name=Test',
+                    '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Lua seed'], check=True)
+    config.repositories['forge']['files'] = [path]
+    config.__post_init__()
+    order['agent'] = execution['agent'] = 'implementer'
+    order['source']['revision'] = subprocess.check_output(
+        ['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip()
+    order['source']['files'] = [{'path':path, 'sha256':hashlib.sha256((root/path).read_bytes()).hexdigest()}]
+    result['evidence'] = [{'path':path, 'start_line':1, 'end_line':2, 'claim':'Seed Lua module'}]
+    result['changes'] = [{'path':path, 'old':'return {}', 'new':'return { enabled = true }'}]
+    execution['audit'][0].update(path=path, end_line=2)
+    execution['result'] = json.dumps(result)
+    assert compile_task(order, config, 'operator')['agent'] == 'implementer'
+    assert validate_result(order, result, execution, config, 'operator')['review_required']
+    config.repositories['forge']['files'] = ['source.py']
+    with pytest.raises(HandoffError, match='source_denied'):
+        compile_task(order, config, 'operator')
+
+
+@pytest.mark.parametrize('path', ['../Info.lua', '.private/Info.lua', 'plugin/../Info.lua',
+                                  '/tmp/Info.lua', 'plugin/Info.lua.pyc', 'plugin/Info.LUA',
+                                  'plugin/.hidden/Info.lua', '.plugin.lrplugin/Info.lua'])
+def test_lua_support_keeps_unsafe_and_unapproved_suffixes_denied(assignment, path):
+    _, config, order, _, _ = assignment
+    order['source']['files'][0]['path'] = path
+    with pytest.raises(HandoffError):
+        compile_task(order, config, 'operator')
+
+
 @pytest.mark.parametrize('kind',['unknown','revision','hash','path','duplicate','limits','grants'])
 def test_invalid_assignment_rejected(assignment,kind):
     root,config,order,_,_=assignment

@@ -78,6 +78,52 @@ leave private directories, which require inspection rather than a blind retry.
 
 ## Start only the controller
 
+### Restore grants after the project files arrive
+
+The project importer does not change runtime permissions. For repositories omitted
+during controller restore, map their existing approved IDs to destination working
+copies using the original verified snapshot. Check the selected source paths:
+a canonical GitHub clone can contain design documents while an archived working
+copy contains the implementation that was originally approved.
+
+```sh
+.venv/bin/python scripts/reconcile_grants.py /private/path/to/snapshot \
+  --repository "approved-id=/absolute/path/to/approved/working-copy"
+```
+
+This is a dry run. It validates every originally selected file through the actual
+source-read policy, preserving the file list and existing credentials. It refuses
+changed principal settings, existing conflicting mappings, a previously removed
+grant on an already configured repository, unsafe files and active tasks. It
+cannot create principals, grant new repository IDs or add source paths.
+
+Repeat with `--apply` to write the validated changes. The command prints a private
+`backup_directory` containing the previous principal/manifest files and target
+metadata. Keep it private. It writes the manifest before principal grants; the
+running controller retains its cached old permissions until restart. Restart only
+the controller after a successful apply, with submissions paused:
+
+```sh
+.venv/bin/python scripts/mac_services.py stop --role controller
+.venv/bin/python scripts/mac_services.py start --role controller
+.venv/bin/python scripts/check_source_access.py --repository approved-id
+```
+
+The checker reads the existing private profile and MCP token, verifies HTTPS
+authentication and waits briefly for startup, then submits one read-only analyst
+task per selected repository. A successful result requires both a completed task
+and a matching allowed source-read audit record; model prose alone is insufficient.
+Receipts print before polling, without credentials or source contents. A timeout
+does not imply the task was rejected; inspect its printed ID before retrying.
+
+For rollback, stop only the controller, preserve the changed files separately,
+and restore the saved `principals.json` first, then `repositories.json`, to the
+targets recorded in `rollback.json`. Do not replace newer configuration changes
+without reconciling them. Restart and recheck authenticated readiness. The
+database, handoff records, tokens and Ollama are unchanged by reconciliation.
+
+### Service startup
+
 If Ollama already runs on loopback, retain its current owner. Install and start
 only the controller, without installing or touching an Ollama LaunchAgent:
 

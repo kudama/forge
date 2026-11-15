@@ -2,6 +2,11 @@
 
 ## Install
 
+For a fresh environment, start with the [preflight and resumable installer](installation.md).
+It handles explicit interpreter selection, packaging upgrades, the MCP/test lock
+and checks in one fail-fast command. The manual sequence below remains available
+for reviewed development environments and troubleshooting.
+
 Use the commands below from the Forge checkout, one block at a time. Stop on
 any failed command. Blocks omit shell comments: interactive zsh may interpret a
 pasted `#` line as a command and report `zsh: command not found: #`.

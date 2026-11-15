@@ -1,5 +1,6 @@
 import asyncio
 import json
+import ssl
 
 import httpx
 import pytest
@@ -25,6 +26,39 @@ def credential(tmp_path, token='t'*40):
 def test_reject_remote_and_credential_urls(tmp_path,url):
     with pytest.raises(ValueError):
         BridgeSettings(credential(tmp_path),url)
+
+
+def test_https_requires_explicit_certificate_trust_and_preserves_loopback_default(tmp_path,monkeypatch):
+    path=credential(tmp_path)
+    settings=BridgeSettings(path,'https://10.0.0.106:8787',tmp_path/'server-cert.pem')
+    with pytest.raises(FileNotFoundError):settings.verification()
+    assert BridgeSettings(path).verification() is True
+    with pytest.raises(ValueError):BridgeSettings(path,'http://10.0.0.106:8787',tmp_path/'cert')
+    with pytest.raises(ValueError):BridgeSettings(path,'https://10.0.0.106:8787')
+    monkeypatch.setenv('FORGE_MCP_TOKEN_FILE',str(path))
+    monkeypatch.setenv('FORGE_CONTROLLER_URL','https://10.0.0.106:8787')
+    monkeypatch.setenv('FORGE_MCP_CA_FILE',str(tmp_path/'server-cert.pem'))
+    assert BridgeSettings.from_environment()==settings
+
+
+async def test_https_transport_uses_certificate_verification(tmp_path,monkeypatch):
+    context=ssl.create_default_context()
+    monkeypatch.setattr(BridgeSettings,'verification',lambda self:context)
+    requests=[]
+    original=httpx.AsyncClient
+    def verified_client(*args,**kwargs):
+        assert kwargs['verify'] is context
+        assert kwargs['trust_env'] is False and kwargs['follow_redirects'] is False
+        return original(*args,**kwargs)
+    monkeypatch.setattr(httpx,'AsyncClient',verified_client)
+    def respond(request):
+        requests.append(request)
+        return httpx.Response(200,json={'status':'ready'})
+    settings=BridgeSettings(credential(tmp_path),'https://10.0.0.106:8787',tmp_path/'cert')
+    async with Client(create_bridge(settings,httpx.MockTransport(respond))) as client:
+        result=await client.call_tool('forge_health')
+        assert not result.is_error and result.structured_content['status']=='ready'
+    assert requests[0].url.scheme=='https'
 
 
 def test_private_single_credential(tmp_path):

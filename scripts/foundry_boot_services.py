@@ -72,13 +72,17 @@ def verify_ready(home):
 
 def stop(target,label):
     if not loaded(target):return
-    command('/bin/launchctl','kill','SIGINT' if label=='com.curator.foundry' else 'SIGTERM',target)
-    end=time.monotonic()+30
-    while time.monotonic()<end:
-        info=command('/bin/launchctl','print',target,check=False)
-        if info.returncode or not re.search(r'^\s*state = running$',info.stdout,re.M):break
-        time.sleep(.2)
-    else:raise RuntimeError('Service did not stop gracefully: '+label)
+    if label=='com.curator.foundry':
+        # Curator exits successfully on SIGINT and does not respawn on success.
+        command('/bin/launchctl','kill','SIGINT',target)
+        end=time.monotonic()+30
+        while time.monotonic()<end:
+            info=command('/bin/launchctl','print',target,check=False)
+            if info.returncode or not re.search(r'^\s*state = running$',info.stdout,re.M):break
+            time.sleep(.2)
+        else:raise RuntimeError('Service did not stop gracefully: '+label)
+    # Unload KeepAlive jobs rather than signalling and waiting for a stopped
+    # state: launchd can respawn a signalled job before the next observation.
     if loaded(target):command('/bin/launchctl','bootout',target)
     end=time.monotonic()+10
     while loaded(target) and time.monotonic()<end:time.sleep(.2)

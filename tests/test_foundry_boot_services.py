@@ -41,6 +41,18 @@ class Migration(unittest.TestCase):
    with self.assertRaisesRegex(RuntimeError,'synthetic bootstrap'):boot.apply('mike')
   for label in boot.LABELS:
    self.assertEqual((self.sources/(label+'.plist')).read_bytes(),self.originals[label]);self.assertFalse((self.daemons/(label+'.plist')).exists())
+ def test_keepalive_jobs_are_unloaded_without_a_signal_restart_race(self):
+  for label in ('org.forge.local.controller','org.forge.local.ollama'):
+   with self.subTest(label=label):
+    active=True;calls=[]
+    def command(*args,**kwargs):
+     nonlocal active
+     calls.append(args)
+     if args[1]=='kill':self.fail('Signalling a KeepAlive job lets launchd respawn it')
+     if args[1]=='bootout':active=False
+     return SimpleNamespace(returncode=0 if active else 113,stdout='state = running' if active else '')
+    with patch.object(boot,'command',side_effect=command):boot.stop('gui/501/'+label,label)
+    self.assertFalse(active);self.assertEqual(sum(call[1]=='bootout' for call in calls),1)
  def test_busy_preflight_changes_no_files(self):
   with patch.object(boot,'assert_idle',side_effect=ValueError('busy')):
    with self.assertRaisesRegex(ValueError,'busy'):boot.apply('mike')

@@ -11,3 +11,9 @@ FileVault is enabled on Foundry. Boot services run after macOS can access its st
 The Plex share currently uses the existing user/Finder mapping method; mounting before login has not been established. Keychain-backed GitHub credentials may also require unlock. This migration does not change mounts or move credentials into plaintext. Validate both separately.
 
 Evidence on 2026-11-15: all three existing services running as login agents; clean idle migration plan on Foundry; four isolated migration tests cover preserved non-root configuration, existing-system-service/root-account refusal, busy preflight with no changes, and restoration after a synthetic bootstrap failure. Administrator installation and actual reboot acceptance remain pending.
+
+## Corrected KeepAlive stop handling — 2026-11-15
+
+The initial administrator attempt rolled back before installing system jobs: the controller received SIGTERM, then launchd immediately restarted its KeepAlive job. Waiting for a persistent stopped state timed out. All original login services and 4,303 visible Curator tasks were verified healthy afterward. The installer now unloads KeepAlive jobs with bootout, preventing respawn while launchd handles shutdown. Curator retains its successful SIGINT exit before unloading.
+
+Five focused tests pass, including a regression for the restart race. The corrected sequence was also exercised on idle Foundry: all three jobs unloaded without respawn, then their unchanged login definitions were restored; authenticated Forge readiness, Ollama readiness and all 4,303 unchanged Curator records were verified. This validates the corrected stop/restore sequence, not system installation or reboot acceptance. A new staged installer version requires a fresh administrator invocation.

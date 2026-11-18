@@ -18,7 +18,7 @@ class HandoffError(ValueError):
     pass
 
 
-def load_json(path, limit=65536):
+def parse_json(data):
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -28,14 +28,18 @@ def load_json(path, limit=65536):
         return result
     def invalid_constant(value):
         raise HandoffError('invalid_json')
-    with Path(path).open('rb') as stream:
-        data = stream.read(limit+1)
-    if len(data)>limit:
-        raise HandoffError('input_too_large')
     try:
         return json.loads(data, object_pairs_hook=unique, parse_constant=invalid_constant)
     except (ValueError, UnicodeError):
         raise HandoffError('invalid_json') from None
+
+
+def load_json(path, limit=65536):
+    with Path(path).open('rb') as stream:
+        data = stream.read(limit+1)
+    if len(data)>limit:
+        raise HandoffError('input_too_large')
+    return parse_json(data)
 
 
 def shape(value, name):
@@ -129,7 +133,7 @@ def validate_snapshot_result(order, result, execution, sources, owner):
         or not isinstance(execution.get('audit'), list)):
         raise HandoffError('execution_mismatch')
     try:
-        if json.loads(execution['result']) != result:
+        if parse_json(execution['result']) != result:
             raise HandoffError('execution_result_mismatch')
     except (KeyError, TypeError, ValueError):
         raise HandoffError('execution_result_mismatch') from None

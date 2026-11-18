@@ -203,3 +203,25 @@ async def test_worker_only_principal_cannot_issue_orders(assignment):
     async with instance(settings,Worker(result)) as (client,app):
         assert (await client.post('/v1/work-orders',json=order)).status_code==403
         assert app.state.store.db.execute('SELECT count(*) FROM tasks').fetchone()[0]==0
+
+
+@pytest.mark.parametrize('key', ['summary', 'claim'])
+async def test_native_rejects_duplicate_worker_result_keys(assignment, key):
+    _, settings, order, result, _ = assignment
+    order['tools'].append('list_repository_files')
+
+    class DuplicateKeyWorker(Worker):
+        async def chat(self, messages, tools, **kwargs):
+            message = await super().chat(messages, tools, **kwargs)
+            if message.get('content'):
+                marker = json.dumps(key) + ':'
+                assert message['content'].count(marker) == 1
+                message['content'] = message['content'].replace(
+                    marker, marker + '"discarded duplicate value",' + marker, 1)
+            return message
+
+    async with instance(settings, DuplicateKeyWorker(result)) as (client, app):
+        task = (await client.post('/v1/work-orders', json=order)).json()['id']
+        row = await terminal(client, task)
+        assert row['status'] == 'failed' and row['error'] == 'invalid_worker_result'
+        assert row['validation']['structure_valid'] is False

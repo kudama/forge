@@ -16,7 +16,7 @@ from .model import ModelError, Ollama
 from .store import Store, TERMINAL
 from .tools import SCHEMAS, ToolDenied, permitted, execute, execute_snapshot
 from .examples import load_examples, retrieve
-from .work_orders import HandoffError, preflight, task_arguments, validate_snapshot_result
+from .work_orders import HandoffError, preflight, task_arguments, validate_snapshot_result, parse_json
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -125,7 +125,7 @@ class Engine:
                     if binding:
                         order, sources = binding
                         try:
-                            validate_snapshot_result(order, json.loads(content),
+                            validate_snapshot_result(order, parse_json(content),
                                 {'owner':owner,'agent':task.agent,'status':'succeeded','result':content,'audit':audit},sources,owner)
                         except (HandoffError, ValueError, TypeError):
                             raise ModelError('invalid_worker_result') from None

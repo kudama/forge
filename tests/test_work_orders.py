@@ -8,6 +8,21 @@ import pytest
 pytest.importorskip('jsonschema')  # Included in the optional MCP tooling lock.
 from scripts.work_orders import HandoffError, compile_task, load_json, validate_result
 from forge_controller.config import Settings
+from forge_controller.work_orders import parse_json
+
+
+@pytest.mark.parametrize('raw', [
+    '{"a":1,"a":2}', '{"outer":[{"a":1,"a":2}]}',
+    'NaN', 'Infinity', '-Infinity', '{"a":NaN}',
+])
+def test_strict_worker_json_rejects_duplicates_and_constants(raw):
+    with pytest.raises(HandoffError, match='invalid_json'):
+        parse_json(raw)
+
+
+def test_strict_worker_json_preserves_valid_nested_values():
+    assert parse_json('{"a":[null,true,2,"text",{"b":3}]}') == {
+        'a': [None, True, 2, 'text', {'b': 3}]}
 
 
 @pytest.fixture

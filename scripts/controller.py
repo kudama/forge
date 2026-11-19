@@ -81,7 +81,7 @@ def start(config_path):
         allowed = {'FORGE_PRINCIPALS_FILE', 'FORGE_REPOSITORIES_FILE', 'FORGE_EXAMPLES_FILE',
                    'FORGE_DATABASE', 'FORGE_MODEL', 'FORGE_ROLE_MODELS', 'FORGE_TOOL_ROUNDS',
                    'FORGE_CONTEXT_LENGTH', 'FORGE_MAX_OUTPUT_TOKENS', 'FORGE_TASK_TIMEOUT',
-                   'FORGE_CAPACITY', 'FORGE_MODEL_URL'} | LISTENER_KEYS
+                   'FORGE_CAPACITY', 'FORGE_QUEUE_TIMEOUT', 'FORGE_MODEL_URL'} | LISTENER_KEYS
         if not isinstance(config, dict) or set(config)-allowed or any(not isinstance(v,str) for v in config.values()):
             raise SystemExit('Invalid local configuration')
         command = server_command(config)

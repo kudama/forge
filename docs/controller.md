@@ -281,7 +281,8 @@ with context 4096 in the prototype comparison.
 | `FORGE_EXAMPLES_FILE` | Optional reviewed example collection; see [feedback loop](feedback-loop.md) |
 | `FORGE_CONTEXT_LENGTH` | Positive integer; default 4096 context tokens |
 | `FORGE_MAX_OUTPUT_TOKENS` | Positive integer; default 512 output tokens |
-| `FORGE_TASK_TIMEOUT` | 60 seconds including queue wait |
+| `FORGE_TASK_TIMEOUT` | 60 seconds of execution, measured from dispatch (queue wait is not counted) |
+| `FORGE_QUEUE_TIMEOUT` | 600 seconds a task may wait before dispatch; positive number |
 | `FORGE_CAPACITY` | 8 admitted tasks, including running work |
 | `FORGE_TOOL_ROUNDS` | Maximum 3 total tool calls |
 | `FORGE_CONTROLLER_URL` | Client URL, default `http://127.0.0.1:8787` |
@@ -303,7 +304,7 @@ All routes except liveness require `Authorization: Bearer <token>`. There is no 
 | `POST /v1/tasks/{id}/cancel` | Cancel queued/running task; completed records remain terminal |
 | `DELETE /v1/tasks/{id}` | Delete settled terminal record; 409 while active |
 
-Statuses: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Errors include `model_unavailable`, `invalid_model_response`, `tool_denied`, `tool_limit_exceeded`, `deadline_exceeded`, and `interrupted`. Unknown or another owner's ID returns 404. Invalid credentials return 401; forbidden capability requests 403; invalid input 422; large bodies 413; full admission capacity 503. Cancellation prevents result publication but cannot undo a remote action; only synthetic read-only actions exist here.
+Statuses: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Errors include `model_unavailable`, `invalid_model_response`, `tool_denied`, `tool_limit_exceeded`, `deadline_exceeded` (execution exceeded its limit), `queue_expired` (waited too long before dispatch; no inference ran), and `interrupted`. Unknown or another owner's ID returns 404. Invalid credentials return 401; forbidden capability requests 403; invalid input 422; large bodies 413; full admission capacity 503. Cancellation prevents result publication but cannot undo a remote action; only synthetic read-only actions exist here.
 
 ## Operation and portability
 

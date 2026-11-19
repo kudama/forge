@@ -67,6 +67,10 @@ class TaskInput(BaseModel):
     tools: list[str] = Field(default_factory=list, max_length=3)
 
 
+class QueueExpired(Exception):
+    """Task waited longer than queue_timeout before dispatch; no inference ran."""
+
+
 class Engine:
     def __init__(self, settings, store, model):
         self.settings, self.store, self.model = settings, store, model
@@ -163,14 +167,16 @@ class Engine:
             try:
                 if self.store.get(task_id)['status'] in TERMINAL:
                     continue
+                # Queue wait and execution are separate budgets. The execution
+                # deadline starts at dispatch; waiting too long is its own outcome
+                # and is decided before the task is ever marked running.
+                if time.monotonic() - queued_at >= self.settings.queue_timeout:
+                    raise QueueExpired()
                 self.store.update(task_id, 'running')
-                remaining = self.settings.timeout - (time.monotonic() - queued_at)
-                if remaining <= 0:
-                    raise TimeoutError()
                 running = asyncio.create_task(self.run(task_id, owner, task, binding))
                 self.active[task_id] = running
                 try:
-                    async with asyncio.timeout(remaining):
+                    async with asyncio.timeout(self.settings.timeout):
                         result, audit = await running
                     self.store.update(task_id, 'succeeded', result=result, audit=audit)
                 except asyncio.CancelledError:
@@ -178,6 +184,8 @@ class Engine:
                     if self.closing:
                         self.store.update(task_id, 'failed', error='interrupted', audit=self.store.get(task_id)['audit'])
                         raise
+            except QueueExpired:
+                self.store.update(task_id, 'failed', error='queue_expired', audit=self.store.get(task_id)['audit'])
             except TimeoutError:
                 self.store.update(task_id, 'failed', error='deadline_exceeded', audit=self.store.get(task_id)['audit'])
             except ModelError as exc:

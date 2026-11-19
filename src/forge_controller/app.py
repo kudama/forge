@@ -2,6 +2,7 @@ import asyncio
 import hmac
 import json
 import logging
+import re
 import time
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -29,6 +30,9 @@ class JsonFormatter(logging.Formatter):
 
 
 log = logging.getLogger('forge_controller')
+# HandoffError messages are a closed vocabulary of snake_case codes written by this
+# project. Only a value of that exact shape is echoed; anything else stays generic.
+REASON = re.compile(r'[a-z0-9_-]{1,64}')
 
 
 
@@ -289,7 +293,12 @@ def create_app(settings=None, model=None):
                 # Capture before queueing; fixed Git reads are never worker tools.
                 sources = await asyncio.to_thread(preflight, order, app.state.settings, owner)
                 arguments = task_arguments(order)
-            except (HandoffError, ValueError, KeyError):
+            except HandoffError as exc:
+                body = {'detail': 'invalid_work_order'}
+                if REASON.fullmatch(str(exc)):
+                    body['reason'] = str(exc)
+                return JSONResponse(body, status_code=422)
+            except (ValueError, KeyError):
                 raise HTTPException(422, 'invalid_work_order') from None
             if app.state.store.has_order(owner, order['work_order_id']):
                 raise HTTPException(409, 'work_order_already_submitted')

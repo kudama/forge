@@ -235,7 +235,7 @@ Set `FORGE_REPOSITORIES_FILE` to an operator-owned JSON manifest outside Git:
 
 Grant the intended principal `agents: ["forge", "repository_analyst"]` and `repositories: ["forge"]` in its private credential record. Submit an analyst task with `agent: "repository_analyst"` and `tools: ["list_repository_files", "read_repository_file"]`. The convenience CLI currently submits only the original `forge` tasks; use the HTTP API for analyst tasks. Configure an adequate tool budget (`FORGE_TOOL_ROUNDS=8` was used for the first experiment).
 
-The analyst can list only manifest entries and read up to 80 numbered lines per call (at most 12 KiB returned). Approved files must be non-hidden `.py`, `.md`, or `.toml` sources. File reads are limited to 64 KiB, reject symlinks at every component, and reject non-regular/multiply-linked files and invalid UTF-8. Neither listing nor reading uses a command-execution tool. Selecting a source for the manifest is an operator responsibility: even source files may contain secrets and must be reviewed before granting access. Keep the manifest restricted to selected source files, not an entire home directory.
+The analyst can list only manifest entries and read up to 80 numbered lines per call (at most 12 KiB returned). A line is LF-terminated, exactly as git and editors number it; other Unicode line separators (form feed, U+2028 and similar) do not start a new line. Work orders reject sources containing carriage returns (`unsupported_line_endings`) because exact-replacement admission cannot rely on them. Approved files must be non-hidden `.py`, `.md`, or `.toml` sources. File reads are limited to 64 KiB, reject symlinks at every component, and reject non-regular/multiply-linked files and invalid UTF-8. Neither listing nor reading uses a command-execution tool. Selecting a source for the manifest is an operator responsibility: even source files may contain secrets and must be reviewed before granting access. Keep the manifest restricted to selected source files, not an entire home directory.
 
 Every read rechecks principal repository permission, requested task capability, path membership, argument shape, and limits. Approved file/range metadata is audited without source content. A task cannot finish as an analyst without at least one successful source read (`sources_not_read`); this does not prove its conclusions are correct. Source content remains untrusted. Reports require senior review; see the [first experiment](experiments/repository-analyst-2026-10-03.md).
 
@@ -281,7 +281,8 @@ with context 4096 in the prototype comparison.
 | `FORGE_EXAMPLES_FILE` | Optional reviewed example collection; see [feedback loop](feedback-loop.md) |
 | `FORGE_CONTEXT_LENGTH` | Positive integer; default 4096 context tokens |
 | `FORGE_MAX_OUTPUT_TOKENS` | Positive integer; default 512 output tokens |
-| `FORGE_TASK_TIMEOUT` | 60 seconds including queue wait |
+| `FORGE_TASK_TIMEOUT` | 60 seconds of execution, measured from dispatch (queue wait is not counted) |
+| `FORGE_QUEUE_TIMEOUT` | 600 seconds a task may wait before dispatch; finite positive number. Expiry settles the task and frees capacity even while another task is running. |
 | `FORGE_CAPACITY` | 8 admitted tasks, including running work |
 | `FORGE_TOOL_ROUNDS` | Maximum 3 total tool calls |
 | `FORGE_CONTROLLER_URL` | Client URL, default `http://127.0.0.1:8787` |
@@ -303,7 +304,7 @@ All routes except liveness require `Authorization: Bearer <token>`. There is no 
 | `POST /v1/tasks/{id}/cancel` | Cancel queued/running task; completed records remain terminal |
 | `DELETE /v1/tasks/{id}` | Delete settled terminal record; 409 while active |
 
-Statuses: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Errors include `model_unavailable`, `invalid_model_response`, `tool_denied`, `tool_limit_exceeded`, `deadline_exceeded`, and `interrupted`. Unknown or another owner's ID returns 404. Invalid credentials return 401; forbidden capability requests 403; invalid input 422; large bodies 413; full admission capacity 503. Cancellation prevents result publication but cannot undo a remote action; only synthetic read-only actions exist here.
+Statuses: `queued`, `running`, `succeeded`, `failed`, `cancelled`. Errors include `model_unavailable`, `invalid_model_response`, `tool_denied`, `tool_limit_exceeded`, `deadline_exceeded` (execution exceeded its limit), `queue_expired` (waited too long before dispatch; no inference ran), and `interrupted`. Unknown or another owner's ID returns 404. Invalid credentials return 401; forbidden capability requests 403; invalid input 422; large bodies 413; full admission capacity 503. Cancellation prevents result publication but cannot undo a remote action; only synthetic read-only actions exist here.
 
 ## Operation and portability
 

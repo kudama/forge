@@ -112,20 +112,27 @@ def create_bridge(settings, transport=None):
         try:
             async with client.stream(method, path, json=payload) as response:
                 if response.status_code >= 300:
-                    if response.status_code == 403:
-                        # Expose only this known validation reason, never arbitrary upstream text.
+                    if response.status_code in {403, 422}:
+                        # Expose only known, bounded validation reasons, never arbitrary upstream text.
                         raw = bytearray()
                         async for chunk in response.aiter_bytes():
                             raw.extend(chunk)
                             if len(raw) > 1024:
                                 break
+                        body = None
                         if len(raw) <= 1024:
                             try:
-                                detail = json.loads(raw).get('detail')
-                            except (ValueError, AttributeError):
-                                detail = None
-                            if detail == 'source_reads_required':
-                                raise ToolError('source_reads_required: analyst/implementer tasks must explicitly include read_repository_file in tools')
+                                body = json.loads(raw)
+                            except ValueError:
+                                body = None
+                        if not isinstance(body, dict):
+                            body = {}
+                        if response.status_code == 403 and body.get('detail') == 'source_reads_required':
+                            raise ToolError('source_reads_required: analyst/implementer tasks must explicitly include read_repository_file in tools')
+                        reason = body.get('reason')
+                        if (response.status_code == 422 and body.get('detail') == 'invalid_work_order'
+                                and isinstance(reason, str) and re.fullmatch(r'[a-z0-9_-]{1,64}', reason)):
+                            raise ToolError('invalid_request: ' + reason)
                     error = {401:'unauthorized', 403:'permission_denied', 404:'task_not_found',
                              409:'task_conflict', 422:'invalid_request', 503:'controller_unavailable'}.get(
                                  response.status_code, 'controller_request_failed')

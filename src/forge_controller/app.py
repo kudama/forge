@@ -2,6 +2,7 @@ import asyncio
 import hmac
 import json
 import logging
+import re
 import time
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -29,6 +30,9 @@ class JsonFormatter(logging.Formatter):
 
 
 log = logging.getLogger('forge_controller')
+# HandoffError messages are a closed vocabulary of snake_case codes written by this
+# project. Only a value of that exact shape is echoed; anything else stays generic.
+REASON = re.compile(r'[a-z0-9_-]{1,64}')
 
 
 
@@ -67,10 +71,15 @@ class TaskInput(BaseModel):
     tools: list[str] = Field(default_factory=list, max_length=3)
 
 
+class QueueExpired(Exception):
+    """Task waited longer than queue_timeout before dispatch; no inference ran."""
+
+
 class Engine:
     def __init__(self, settings, store, model):
         self.settings, self.store, self.model = settings, store, model
         self.queue = asyncio.Queue(maxsize=settings.capacity)
+        self.queue_timers = {}
         self.active = {}
         self.capture_lock = asyncio.Lock()
         self.worker = None
@@ -83,8 +92,36 @@ class Engine:
         task_id = self.store.create(owner, task.agent, binding)
         self.active[task_id] = None
         self.queue.put_nowait((task_id, owner, task, time.monotonic(), binding))
+        self.queue_timers[task_id] = asyncio.get_running_loop().call_later(
+            self.settings.queue_timeout, self.expire_queued, task_id)
         log.info('task_queued', extra={'task_id': task_id, 'agent': task.agent})
         return task_id
+
+    def expire_queued(self, task_id):
+        self.queue_timers.pop(task_id, None)
+        if task_id not in self.active or self.active[task_id] is not None:
+            return
+        row = self.store.get(task_id)
+        if row['status'] == 'queued':
+            self.store.update(task_id, 'failed', error='queue_expired', audit=row['audit'])
+        # Remove the source packet as well as the admission slot. Rebuild through
+        # Queue's public API, preserving FIFO order and unfinished-task accounting.
+        # This synchronous callback cannot interleave with dispatch or submission.
+        pending = []
+        removed = 0
+        while not self.queue.empty():
+            entry = self.queue.get_nowait()
+            if entry[0] != task_id:
+                pending.append(entry)
+            else:
+                removed += 1
+        for entry in pending:
+            self.queue.put_nowait(entry)
+            self.queue.task_done()
+        for _ in range(removed):
+            self.queue.task_done()
+        self.active.pop(task_id)
+        log.info('task_finished', extra={'task_id': task_id, 'status': self.store.get(task_id)['status']})
 
     def cancel(self, task_id):
         if self.store.get(task_id)['status'] not in TERMINAL:
@@ -160,17 +197,22 @@ class Engine:
     async def work(self):
         while True:
             task_id, owner, task, queued_at, binding = await self.queue.get()
+            timer = self.queue_timers.pop(task_id, None)
+            if timer:
+                timer.cancel()
             try:
                 if self.store.get(task_id)['status'] in TERMINAL:
                     continue
+                # Queue wait and execution are separate budgets. The execution
+                # deadline starts at dispatch; waiting too long is its own outcome
+                # and is decided before the task is ever marked running.
+                if time.monotonic() - queued_at >= self.settings.queue_timeout:
+                    raise QueueExpired()
                 self.store.update(task_id, 'running')
-                remaining = self.settings.timeout - (time.monotonic() - queued_at)
-                if remaining <= 0:
-                    raise TimeoutError()
                 running = asyncio.create_task(self.run(task_id, owner, task, binding))
                 self.active[task_id] = running
                 try:
-                    async with asyncio.timeout(remaining):
+                    async with asyncio.timeout(self.settings.timeout):
                         result, audit = await running
                     self.store.update(task_id, 'succeeded', result=result, audit=audit)
                 except asyncio.CancelledError:
@@ -178,6 +220,8 @@ class Engine:
                     if self.closing:
                         self.store.update(task_id, 'failed', error='interrupted', audit=self.store.get(task_id)['audit'])
                         raise
+            except QueueExpired:
+                self.store.update(task_id, 'failed', error='queue_expired', audit=self.store.get(task_id)['audit'])
             except TimeoutError:
                 self.store.update(task_id, 'failed', error='deadline_exceeded', audit=self.store.get(task_id)['audit'])
             except ModelError as exc:
@@ -192,6 +236,9 @@ class Engine:
 
     async def stop(self):
         self.closing = True
+        for timer in self.queue_timers.values():
+            timer.cancel()
+        self.queue_timers.clear()
         if self.worker:
             self.worker.cancel()
             await asyncio.gather(self.worker, return_exceptions=True)
@@ -281,7 +328,12 @@ def create_app(settings=None, model=None):
                 # Capture before queueing; fixed Git reads are never worker tools.
                 sources = await asyncio.to_thread(preflight, order, app.state.settings, owner)
                 arguments = task_arguments(order)
-            except (HandoffError, ValueError, KeyError):
+            except HandoffError as exc:
+                body = {'detail': 'invalid_work_order'}
+                if REASON.fullmatch(str(exc)):
+                    body['reason'] = str(exc)
+                return JSONResponse(body, status_code=422)
+            except (ValueError, KeyError):
                 raise HTTPException(422, 'invalid_work_order') from None
             if app.state.store.has_order(owner, order['work_order_id']):
                 raise HTTPException(409, 'work_order_already_submitted')

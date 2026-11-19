@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import stat
 from dataclasses import dataclass, field
@@ -20,6 +21,7 @@ class Settings:
     repositories: dict[str, dict] = field(default_factory=dict)
     examples_file: Path | None = None
     role_models: dict[str, str] = field(default_factory=dict)
+    queue_timeout: float = 600
 
     def __post_init__(self):
         if not isinstance(self.role_models, dict) or any(
@@ -37,6 +39,9 @@ class Settings:
             raise ValueError("Invalid model URL")
         if self.timeout <= 0 or self.capacity < 1 or self.tool_rounds < 1:
             raise ValueError("Limits must be positive")
+        if (type(self.queue_timeout) not in {int, float}
+                or not math.isfinite(self.queue_timeout) or self.queue_timeout <= 0):
+            raise ValueError("queue_timeout must be a finite positive number")
         if not self.model or not self.principals:
             raise ValueError("Model and principals are required")
         tokens = []
@@ -93,6 +98,7 @@ class Settings:
             context_length=int(os.environ.get("FORGE_CONTEXT_LENGTH", "4096")),
             max_output_tokens=int(os.environ.get("FORGE_MAX_OUTPUT_TOKENS", "512")),
             timeout=float(os.environ.get("FORGE_TASK_TIMEOUT", "60")),
+            queue_timeout=float(os.environ.get("FORGE_QUEUE_TIMEOUT", "600")),
             capacity=int(os.environ.get("FORGE_CAPACITY", "8")),
             tool_rounds=int(os.environ.get("FORGE_TOOL_ROUNDS", "3")),
             examples_file=Path(os.environ["FORGE_EXAMPLES_FILE"]).expanduser() if os.environ.get("FORGE_EXAMPLES_FILE") else None,

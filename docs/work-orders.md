@@ -193,6 +193,19 @@ file is bounded to 64 KiB, at most 20 files per order; normal admission capacity
 still applies. The existing 32 KiB request and 8,000-character compiled prompt
 limits remain in force. Oversized or invalid orders fail rather than truncate.
 
+A rejected order returns `422` with `{"detail": "invalid_work_order", "reason": CODE}`
+and never queues inference. `CODE` comes from a closed vocabulary, so a caller can
+act on it: `invalid_work-order` (does not match the published schema),
+`principal_denied`, `scope_denied` (repository or tool not granted),
+`runtime_limits_mismatch`, `source_revision_unavailable`, `stale_revision`
+(order revision is not the checkout's current HEAD), `duplicate_source_path`,
+`source_denied`, `source_hash_mismatch`, `invalid_source_encoding`,
+`unsupported_line_endings` (source contains a carriage return) and
+`compiled_prompt_too_large`. Only codes of that exact shape are echoed; any other
+internal failure returns the bare `invalid_work_order`. The MCP bridge relays the
+code as `invalid_request: CODE` and never relays other upstream text. Duplicate IDs
+still return `409`.
+
 Native workers list only selected files and read only captured UTF-8 source from
 the pinned commit. Subsequent checkout changes cannot alter their reads. Reviewed
 examples are omitted from native tasks to avoid unrelated source context. Existing

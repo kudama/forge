@@ -128,8 +128,8 @@ There is no automatic fallback to the old host.
 
 Submit analyst/implementer tasks with `read_repository_file` in their declared
 tools and specific source paths/ranges. Poll using the returned ID until
-`succeeded`, `failed` or `cancelled`. Avoid busy polling; queue wait counts toward
-the controller deadline. Every inference round uses the configured role model.
+`succeeded`, `failed` or `cancelled`. Avoid busy polling; queue wait is limited
+separately (`queue_expired`) and does not count toward the execution deadline. Every inference round uses the configured role model.
 The bridge performs no implicit retries: a lost submission response may correspond
 to an accepted task. Do not blindly resubmit. Retain known task IDs across client
 reconnections; disconnecting does not cancel work. Use explicit cancellation.

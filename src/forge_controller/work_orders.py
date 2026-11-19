@@ -9,7 +9,7 @@ import sys
 
 from jsonschema import Draft202012Validator
 from forge_controller.config import Settings
-from forge_controller.tools import execute, permitted, ToolDenied
+from forge_controller.tools import execute, permitted, split_lines, ToolDenied
 
 ROOT = Path(__file__).resolve().parent
 
@@ -91,9 +91,15 @@ def preflight(order, settings, owner):
             or current['source_sha256']!=file['sha256']):
             raise HandoffError('source_hash_mismatch')
         try:
-            sources[path] = pinned.decode('utf-8')
+            text = pinned.decode('utf-8')
         except UnicodeError:
             raise HandoffError('invalid_source_encoding') from None
+        # Exact-replacement admission compares the model's text with the raw source.
+        # CR cannot be shown or reproduced reliably, so refuse explicitly rather than
+        # let every multi-line edit fail later as an unexplained mismatch.
+        if '\r' in text:
+            raise HandoffError('unsupported_line_endings')
+        sources[path] = text
     return sources
 
 
@@ -155,7 +161,7 @@ def validate_snapshot_result(order, result, execution, sources, owner):
                 raise HandoffError('undeclared_source_read')
             start, end = entry.get('start_line'), entry.get('end_line')
             if (type(start) is not int or type(end) is not int or start<1 or end<start
-                or end>len(sources[entry['path']].splitlines())):
+                or end>len(split_lines(sources[entry['path']]))):
                 raise HandoffError('invalid_read_audit')
             ranges.setdefault(entry['path'], []).append((start, end))
             reads += 1
@@ -169,7 +175,7 @@ def validate_snapshot_result(order, result, execution, sources, owner):
         raise HandoffError('invalid_blocked_result')
     for item in result['evidence']:
         if (item['path'] not in sources or item['start_line']>item['end_line']
-            or item['end_line']>len(sources[item['path']].splitlines())
+            or item['end_line']>len(split_lines(sources[item['path']]))
             or not any(start<=item['start_line'] and item['end_line']<=end
                        for start,end in ranges.get(item['path'], []))):
             raise HandoffError('invalid_evidence_scope')

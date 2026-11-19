@@ -79,6 +79,7 @@ class Engine:
     def __init__(self, settings, store, model):
         self.settings, self.store, self.model = settings, store, model
         self.queue = asyncio.Queue(maxsize=settings.capacity)
+        self.queue_timers = {}
         self.active = {}
         self.capture_lock = asyncio.Lock()
         self.worker = None
@@ -91,8 +92,36 @@ class Engine:
         task_id = self.store.create(owner, task.agent, binding)
         self.active[task_id] = None
         self.queue.put_nowait((task_id, owner, task, time.monotonic(), binding))
+        self.queue_timers[task_id] = asyncio.get_running_loop().call_later(
+            self.settings.queue_timeout, self.expire_queued, task_id)
         log.info('task_queued', extra={'task_id': task_id, 'agent': task.agent})
         return task_id
+
+    def expire_queued(self, task_id):
+        self.queue_timers.pop(task_id, None)
+        if task_id not in self.active or self.active[task_id] is not None:
+            return
+        row = self.store.get(task_id)
+        if row['status'] == 'queued':
+            self.store.update(task_id, 'failed', error='queue_expired', audit=row['audit'])
+        # Remove the source packet as well as the admission slot. Rebuild through
+        # Queue's public API, preserving FIFO order and unfinished-task accounting.
+        # This synchronous callback cannot interleave with dispatch or submission.
+        pending = []
+        removed = 0
+        while not self.queue.empty():
+            entry = self.queue.get_nowait()
+            if entry[0] != task_id:
+                pending.append(entry)
+            else:
+                removed += 1
+        for entry in pending:
+            self.queue.put_nowait(entry)
+            self.queue.task_done()
+        for _ in range(removed):
+            self.queue.task_done()
+        self.active.pop(task_id)
+        log.info('task_finished', extra={'task_id': task_id, 'status': self.store.get(task_id)['status']})
 
     def cancel(self, task_id):
         if self.store.get(task_id)['status'] not in TERMINAL:
@@ -168,6 +197,9 @@ class Engine:
     async def work(self):
         while True:
             task_id, owner, task, queued_at, binding = await self.queue.get()
+            timer = self.queue_timers.pop(task_id, None)
+            if timer:
+                timer.cancel()
             try:
                 if self.store.get(task_id)['status'] in TERMINAL:
                     continue
@@ -204,6 +236,9 @@ class Engine:
 
     async def stop(self):
         self.closing = True
+        for timer in self.queue_timers.values():
+            timer.cancel()
+        self.queue_timers.clear()
         if self.worker:
             self.worker.cancel()
             await asyncio.gather(self.worker, return_exceptions=True)

@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import stat
 from dataclasses import dataclass, field
@@ -38,8 +39,9 @@ class Settings:
             raise ValueError("Invalid model URL")
         if self.timeout <= 0 or self.capacity < 1 or self.tool_rounds < 1:
             raise ValueError("Limits must be positive")
-        if type(self.queue_timeout) not in {int, float} or self.queue_timeout <= 0:
-            raise ValueError("queue_timeout must be a positive number")
+        if (type(self.queue_timeout) not in {int, float}
+                or not math.isfinite(self.queue_timeout) or self.queue_timeout <= 0):
+            raise ValueError("queue_timeout must be a finite positive number")
         if not self.model or not self.principals:
             raise ValueError("Model and principals are required")
         tokens = []

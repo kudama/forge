@@ -282,7 +282,7 @@ with context 4096 in the prototype comparison.
 | `FORGE_CONTEXT_LENGTH` | Positive integer; default 4096 context tokens |
 | `FORGE_MAX_OUTPUT_TOKENS` | Positive integer; default 512 output tokens |
 | `FORGE_TASK_TIMEOUT` | 60 seconds of execution, measured from dispatch (queue wait is not counted) |
-| `FORGE_QUEUE_TIMEOUT` | 600 seconds a task may wait before dispatch; positive number |
+| `FORGE_QUEUE_TIMEOUT` | 600 seconds a task may wait before dispatch; finite positive number. Expiry settles the task and frees capacity even while another task is running. |
 | `FORGE_CAPACITY` | 8 admitted tasks, including running work |
 | `FORGE_TOOL_ROUNDS` | Maximum 3 total tool calls |
 | `FORGE_CONTROLLER_URL` | Client URL, default `http://127.0.0.1:8787` |

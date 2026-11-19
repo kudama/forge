@@ -49,7 +49,82 @@ async def test_execution_deadline_still_enforced_after_dispatch(tmp_path):
         assert row['status'] == 'failed' and row['error'] == 'deadline_exceeded'
 
 
-@pytest.mark.parametrize('value', [0, -1, True, '5', None])
+async def test_expiry_releases_capacity_while_inference_is_blocked(tmp_path):
+    fake = FakeModel('wait')
+    async with client(tmp_path, fake, timeout=5, queue_timeout=.05, capacity=2) as (c, app):
+        first = await submit(c)
+        await fake.started.wait()
+        # Repeat without releasing inference: expired queue entries must not
+        # accumulate and fill the physical queue after admission slots are freed.
+        for _ in range(4):
+            queued = await submit(c)
+            row = await terminal(c, queued)
+            assert row['error'] == 'queue_expired' and row['audit'] == []
+            assert (await c.get('/v1/tasks/' + first)).json()['status'] == 'running'
+            assert fake.calls == 1
+            assert (await c.delete('/v1/tasks/' + queued)).status_code == 204
+        last = await submit(c)
+        fake.release.set()
+        assert (await terminal(c, first))['status'] == 'succeeded'
+        assert (await terminal(c, last))['status'] == 'succeeded'
+        assert fake.calls == 2
+        await asyncio.wait_for(app.state.engine.queue.join(), timeout=.5)
+
+
+async def test_expiry_preserves_other_tasks_fifo_order(tmp_path):
+    class RecordingModel(FakeModel):
+        def __init__(self):
+            super().__init__('wait')
+            self.prompts = []
+
+        async def chat(self, messages, tools, *, agent='forge'):
+            self.prompts.append(messages[-1]['content'])
+            return await super().chat(messages, tools, agent=agent)
+
+    fake = RecordingModel()
+    async with client(tmp_path, fake, timeout=5, queue_timeout=.3) as (c, app):
+        first = await submit(c, prompt='first')
+        await fake.started.wait()
+        expired = await submit(c, prompt='expired')
+        await asyncio.sleep(.2)
+        third = await submit(c, prompt='third')
+        fourth = await submit(c, prompt='fourth')
+        assert (await terminal(c, expired))['error'] == 'queue_expired'
+        fake.release.set()
+        for task_id in [first, third, fourth]:
+            assert (await terminal(c, task_id))['status'] == 'succeeded'
+        assert fake.prompts == ['first', 'third', 'fourth']
+        await asyncio.wait_for(app.state.engine.queue.join(), timeout=.5)
+
+
+async def test_dispatched_task_does_not_expire_at_its_old_queue_deadline(tmp_path):
+    fake = FakeModel('wait')
+    async with client(tmp_path, fake, timeout=5, queue_timeout=.05) as (c, app):
+        task_id = await submit(c)
+        await fake.started.wait()
+        await asyncio.sleep(.1)
+        assert (await c.get('/v1/tasks/' + task_id)).json()['status'] == 'running'
+        fake.release.set()
+        assert (await terminal(c, task_id))['status'] == 'succeeded'
+
+
+async def test_expiry_timer_preserves_cancellation_and_stops_on_shutdown(tmp_path):
+    fake = FakeModel('wait')
+    async with client(tmp_path, fake, timeout=5, queue_timeout=.05) as (c, app):
+        await submit(c)
+        await fake.started.wait()
+        queued = await submit(c)
+        await c.post('/v1/tasks/' + queued + '/cancel')
+        await asyncio.sleep(.1)
+        row = (await c.get('/v1/tasks/' + queued)).json()
+        assert row['status'] == 'cancelled' and row['error'] == 'cancelled_by_user'
+        pending = await submit(c)
+    # Timer callbacks must not access the closed store or overwrite interrupted.
+    await asyncio.sleep(.1)
+    assert app.state.engine.queue_timers == {}
+
+
+@pytest.mark.parametrize('value', [0, -1, True, '5', None, float('nan'), float('inf'), -float('inf')])
 def test_queue_timeout_must_be_a_positive_number(tmp_path, value):
     principals = {'mike': {'token': 'a' * 40, 'agents': ['forge'], 'services': []}}
     with pytest.raises(ValueError):
@@ -68,3 +143,14 @@ def test_queue_timeout_environment(tmp_path, monkeypatch, env, expected):
     else:
         monkeypatch.setenv('FORGE_QUEUE_TIMEOUT', env)
     assert Settings.from_environment().queue_timeout == expected
+
+
+@pytest.mark.parametrize('value', ['nan', 'inf', '-inf'])
+def test_nonfinite_environment_queue_timeout_is_rejected(tmp_path, monkeypatch, value):
+    path = tmp_path / 'principals.json'
+    path.write_text(json.dumps({'mike': {'token': 'a' * 40, 'agents': ['forge'], 'services': []}}))
+    path.chmod(0o600)
+    monkeypatch.setenv('FORGE_PRINCIPALS_FILE', str(path))
+    monkeypatch.setenv('FORGE_QUEUE_TIMEOUT', value)
+    with pytest.raises(ValueError, match='queue_timeout'):
+        Settings.from_environment()

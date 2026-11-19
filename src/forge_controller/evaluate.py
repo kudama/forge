@@ -32,7 +32,7 @@ def assess(case, task, settings, owner):
         try:
             source = execute(settings, owner, case['agent'], 'read_repository_file', {
                 'repository': 'forge', 'path': 'src/forge_controller/config.py', 'start_line': 1, 'end_line': 80})
-            lines = {int(line.split(': ', 1)[0]): line.split(': ', 1)[1] for line in source['content'].splitlines()}
+            lines = {int(line.split(': ', 1)[0]): line.split(': ', 1)[1] for line in source['content'].split('\n')}
             cited = [int(n) for n in re.findall(r'src/forge_controller/config\.py:(\d+)', result)]
             checks['cited_defaults_match_source'] = bool(cited) and all(n in lines for n in cited) and all(
                 any(field in lines[n] and value in lines[n] for n in cited) for field, value in [('context_length','4096'),('max_output_tokens','512')])
@@ -57,7 +57,7 @@ def assess(case, task, settings, owner):
                 'repository': 'forge', 'path': patch['path'], 'start_line': 1, 'end_line': 80})
             if source['total_lines'] > 80:
                 raise ValueError('Fixture exceeds checker scope')
-            text = '\n'.join(line.split(': ', 1)[1] for line in source['content'].splitlines()) + '\n'
+            text = '\n'.join(line.split(': ', 1)[1] for line in source['content'].split('\n')) + '\n'
             if text.count(edit['before']) != 1 or text.count('temperature=0') != 1:
                 raise ValueError('Patch does not match exact fixture')
             candidate = text.replace(edit['before'], edit['after'], 1)

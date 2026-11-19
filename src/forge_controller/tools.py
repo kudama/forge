@@ -9,6 +9,20 @@ class ToolDenied(Exception):
     pass
 
 
+def split_lines(text):
+    """Split on LF only, as git, editors and reviewers number lines.
+
+    str.splitlines() also breaks on \\x0b, \\x0c, \\x1c-\\x1e, \\x85 and U+2028/9,
+    which shifts every later line number away from the file a reviewer opens.
+    A final newline terminates the last line rather than starting another one;
+    any CR is preserved so the model sees what is actually in the source.
+    """
+    lines = text.split('\n')
+    if lines and lines[-1] == '':
+        lines.pop()
+    return lines
+
+
 def schema(name, description, properties):
     return {'type': 'function', 'function': {'name': name, 'description': description,
             'parameters': {'type': 'object', 'properties': properties,
@@ -74,7 +88,7 @@ def execute(settings, owner, agent, name, args):
             data = stream.read(65537)
         if len(data) > 65536:
             raise ToolDenied()
-        lines = data.decode('utf-8').splitlines()
+        lines = split_lines(data.decode('utf-8'))
         if start > len(lines):
             raise ToolDenied()
         text = '\n'.join(f'{n}: {line}' for n, line in enumerate(lines[start-1:end], start))
@@ -106,7 +120,7 @@ def execute_snapshot(settings, owner, agent, name, args, order, sources):
     if (not isinstance(path, str) or path not in sources or type(start) is not int or type(end) is not int
         or start < 1 or end < start or end-start >= 80):
         raise ToolDenied()
-    lines = sources[path].splitlines()
+    lines = split_lines(sources[path])
     if start > len(lines):
         raise ToolDenied()
     text = '\n'.join(f'{n}: {line}' for n,line in enumerate(lines[start-1:end],start))

@@ -124,7 +124,10 @@ The reusable producer/publisher, transport and server plugin are implemented and
 tested offline. This does not assert application-specific probes/instrumentation
 exist in Jarvis, Citadel, Forge, Thoth, Hermes or Bear. Each service owner must wire
 its real metrics and callbacks before production acceptance. There is no verified
-Checkmk endpoint/version in the current inventory, and no service, certificate,
-notification channel or running agent was changed. Secrets and OpenBao are
+Checkmk endpoint/version in the original inventory. On October 15, Mike supplied
+2.5.0p14 Community, confirmed in the server UI; package 0.1.1 adds tests for that
+exact release. Installation is authorized but needs an authenticated site shell,
+because Community has no web package manager. No service, certificate,
+notification channel or running agent has been changed by the source builds. Secrets and OpenBao are
 represented only by safe dependency aliases and aggregate state; health polling
 must not retrieve secrets to prove access.
